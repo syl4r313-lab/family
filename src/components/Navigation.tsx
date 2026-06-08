@@ -23,8 +23,10 @@ interface NavigationProps {
 export default function Navigation({ currentPage, onNavigate }: NavigationProps) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50">
-      {/* Glass backdrop */}
-      <div className="bg-gray-950/80 backdrop-blur-xl border-t border-white/10">
+      <div
+        className="bg-white border-t border-gray-100"
+        style={{ boxShadow: '0 -1px 8px rgba(0,0,0,0.06)' }}
+      >
         <div className="flex items-stretch justify-around max-w-lg mx-auto px-2">
           {navItems.map((item) => {
             const isActive = currentPage === item.id;
@@ -39,7 +41,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                 {isActive && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute inset-x-1 top-0 h-0.5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+                    className="absolute inset-x-1 top-0 h-0.5 bg-emerald-500 rounded-full"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -47,10 +49,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                 <motion.span
                   className="text-2xl mb-0.5"
                   animate={{
-                    scale: isActive ? 1.2 : 1,
-                    filter: isActive
-                      ? 'drop-shadow(0 0 8px rgba(139,92,246,0.8))'
-                      : 'none',
+                    scale: isActive ? 1.15 : 1,
                   }}
                   transition={{ duration: 0.2 }}
                 >
@@ -60,8 +59,8 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                 <span
                   className={`text-xs font-medium transition-colors duration-200 ${
                     isActive
-                      ? 'text-purple-400'
-                      : 'text-gray-500'
+                      ? 'text-emerald-600'
+                      : 'text-gray-400'
                   }`}
                 >
                   {item.label}

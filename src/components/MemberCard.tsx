@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Flame, Trophy, Star } from 'lucide-react';
+import { Flame, Trophy, Zap } from 'lucide-react';
 import type { FamilyMember } from '../types';
 import XPBar from './XPBar';
 
@@ -10,41 +10,52 @@ interface MemberCardProps {
   onClick?: () => void;
 }
 
-const rankColors = ['text-yellow-400', 'text-gray-300', 'text-orange-400'];
 const rankEmojis = ['🥇', '🥈', '🥉'];
+
+function AvatarDisplay({ member, size }: { member: FamilyMember; size: 'sm' | 'lg' }) {
+  const dim = size === 'sm' ? 'w-10 h-10' : 'w-16 h-16';
+  const textSize = size === 'sm' ? 'text-xl' : 'text-4xl';
+  return (
+    <div className={`${dim} rounded-full overflow-hidden border-2 border-gray-100 bg-gray-50 flex items-center justify-center shrink-0`}>
+      {member.avatarType === 'photo' ? (
+        <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+      ) : (
+        <span className={textSize}>{member.avatar}</span>
+      )}
+    </div>
+  );
+}
 
 export default function MemberCard({ member, rank, compact = false, onClick }: MemberCardProps) {
   if (compact) {
     return (
       <motion.div
         onClick={onClick}
-        whileHover={{ scale: 1.03 }}
+        whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.97 }}
-        className="glass-card p-3 cursor-pointer hover:bg-white/15 transition-colors"
+        className="card p-3 cursor-pointer hover:shadow-card-hover transition-shadow"
       >
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/30 to-blue-500/30 border border-white/20 flex items-center justify-center text-xl">
-              {member.avatar}
-            </div>
+            <AvatarDisplay member={member} size="sm" />
             {member.streak > 0 && (
-              <div className="absolute -bottom-1 -right-1 bg-orange-500 rounded-full w-4 h-4 flex items-center justify-center">
+              <div className="absolute -bottom-1 -right-1 bg-orange-100 border border-orange-200 rounded-full w-4 h-4 flex items-center justify-center">
                 <span className="text-xs">🔥</span>
               </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-white truncate">{member.name}</span>
-              <span className="text-xs bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded-full font-bold">
+              <span className="font-semibold text-sm text-gray-900 truncate">{member.name}</span>
+              <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold shrink-0">
                 Lv.{member.level}
               </span>
             </div>
             <XPBar xp={member.xp} level={member.level} showLabel={false} height="sm" animated={false} />
           </div>
           <div className="text-right shrink-0">
-            <div className="text-yellow-400 font-bold text-sm">{member.xp.toLocaleString()}</div>
-            <div className="text-gray-500 text-xs">XP</div>
+            <div className="text-amber-500 font-bold text-sm">{member.xp.toLocaleString()}</div>
+            <div className="text-gray-400 text-xs">XP</div>
           </div>
         </div>
       </motion.div>
@@ -54,54 +65,42 @@ export default function MemberCard({ member, rank, compact = false, onClick }: M
   return (
     <motion.div
       onClick={onClick}
-      whileHover={{ scale: 1.02, y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      className="glass-card p-5 cursor-pointer hover:bg-white/15 transition-colors relative overflow-hidden"
+      whileHover={{ scale: 1.01, y: -2 }}
+      whileTap={{ scale: 0.99 }}
+      className="card p-5 cursor-pointer relative overflow-hidden hover:shadow-card-hover transition-shadow"
     >
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-purple-500/10 to-transparent rounded-bl-full" />
-
       {/* Rank indicator */}
       {rank !== undefined && rank < 3 && (
-        <div className="absolute top-3 right-3 text-2xl">
-          {rankEmojis[rank]}
-        </div>
+        <div className="absolute top-3 right-3 text-2xl">{rankEmojis[rank]}</div>
       )}
 
       {/* Header */}
       <div className="flex items-start gap-4">
         <div className="relative">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/40 to-blue-500/40 border border-white/20 flex items-center justify-center text-4xl shadow-glow-purple">
-            {member.avatar}
-          </div>
+          <AvatarDisplay member={member} size="lg" />
           {member.streak > 0 && (
-            <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-full px-1.5 py-0.5 flex items-center gap-0.5 shadow-lg">
-              <Flame size={10} className="text-white" />
-              <span className="text-white text-xs font-bold">{member.streak}</span>
+            <div className="absolute -bottom-1 -right-1 bg-orange-50 border border-orange-200 rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
+              <Flame size={9} className="text-orange-500" />
+              <span className="text-orange-600 text-xs font-bold">{member.streak}</span>
             </div>
           )}
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 pr-8">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-lg font-bold text-white">{member.name}</h3>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+            <h3 className="text-lg font-bold text-gray-900">{member.name}</h3>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${
               member.role === 'parent'
-                ? 'bg-blue-500/30 text-blue-300 border border-blue-500/30'
-                : 'bg-pink-500/30 text-pink-300 border border-pink-500/30'
+                ? 'bg-violet-50 text-violet-700 border-violet-200'
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200'
             }`}>
               {member.role === 'parent' ? '👑 Elternteil' : '⭐ Kind'}
             </span>
           </div>
-          <div className="flex items-center gap-3 mt-1">
-            <span className="bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold px-2.5 py-0.5 rounded-full">
+          <div className="mt-1">
+            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">
               Level {member.level}
             </span>
-            {rank !== undefined && (
-              <span className={`text-sm font-bold ${rankColors[rank] || 'text-gray-400'}`}>
-                #{rank + 1}
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -113,23 +112,23 @@ export default function MemberCard({ member, rank, compact = false, onClick }: M
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mt-4">
-        <div className="bg-white/5 rounded-xl p-2 text-center">
-          <div className="flex items-center justify-center gap-1 text-yellow-400">
-            <Star size={12} />
+        <div className="bg-amber-50 rounded-xl p-2 text-center border border-amber-100">
+          <div className="flex items-center justify-center gap-1 text-amber-500">
+            <Zap size={11} />
             <span className="font-bold text-sm">{member.xp.toLocaleString()}</span>
           </div>
           <div className="text-gray-500 text-xs mt-0.5">XP</div>
         </div>
-        <div className="bg-white/5 rounded-xl p-2 text-center">
-          <div className="flex items-center justify-center gap-1 text-green-400">
-            <Trophy size={12} />
+        <div className="bg-emerald-50 rounded-xl p-2 text-center border border-emerald-100">
+          <div className="flex items-center justify-center gap-1 text-emerald-600">
+            <Trophy size={11} />
             <span className="font-bold text-sm">{member.completedQuests}</span>
           </div>
           <div className="text-gray-500 text-xs mt-0.5">Quests</div>
         </div>
-        <div className="bg-white/5 rounded-xl p-2 text-center">
-          <div className="flex items-center justify-center gap-1 text-orange-400">
-            <Flame size={12} />
+        <div className="bg-orange-50 rounded-xl p-2 text-center border border-orange-100">
+          <div className="flex items-center justify-center gap-1 text-orange-500">
+            <Flame size={11} />
             <span className="font-bold text-sm">{member.streak}</span>
           </div>
           <div className="text-gray-500 text-xs mt-0.5">Streak</div>
@@ -144,13 +143,13 @@ export default function MemberCard({ member, rank, compact = false, onClick }: M
               key={badge.id}
               whileHover={{ scale: 1.2 }}
               title={badge.description}
-              className="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-500/30 to-orange-500/30 border border-yellow-500/30 flex items-center justify-center text-sm shadow-[0_0_8px_rgba(234,179,8,0.3)] cursor-help"
+              className="w-7 h-7 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-sm cursor-help"
             >
               {badge.emoji}
             </motion.div>
           ))}
           {member.badges.length > 6 && (
-            <div className="w-7 h-7 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs text-gray-400">
+            <div className="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-500 font-medium">
               +{member.badges.length - 6}
             </div>
           )}

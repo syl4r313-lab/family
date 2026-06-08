@@ -1,4 +1,5 @@
 name: Deploy FamilyQuest to GitHub Pages
+# retrigger after Pages source was set to GitHub Actions
 
 on:
   push:
