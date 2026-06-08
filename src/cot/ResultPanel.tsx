@@ -5,7 +5,7 @@ interface Props {
 }
 
 export default function ResultPanel({ result }: Props) {
-  const { startSet, closedSet, organization, isOrganization, trace } = result;
+  const { startSet, closedSet, organization, isOrganization, isExactOrganization, trace } = result;
 
   // Compute which resources were removed (in closedSet but not in organization/final)
   const finalSet = organization ?? [];
@@ -26,17 +26,25 @@ export default function ResultPanel({ result }: Props) {
       <div
         className={`rounded-2xl border-2 p-6 text-center ${
           isOrganization
-            ? 'border-[#00ff41] bg-[#0a0a0a]'
+            ? isExactOrganization ? 'border-[#00ff41] bg-[#0a0a0a]' : 'border-[#ffff00] bg-[#0a0a0a]'
             : 'border-[#ff0080] bg-[#0a0a0a]'
         }`}
       >
-        <div className="text-4xl mb-3">{isOrganization ? '✓' : '✗'}</div>
-        <div className={`text-xl font-bold mb-2 ${isOrganization ? 'text-[#00ff41]' : 'text-[#ff0080]'}`}>
+        <div className="text-4xl mb-3">{isOrganization ? (isExactOrganization ? '✓' : '~') : '✗'}</div>
+        <div className={`text-xl font-bold mb-2 ${isOrganization ? (isExactOrganization ? 'text-[#00ff41]' : 'text-[#ffff00]') : 'text-[#ff0080]'}`}>
           {isOrganization
-            ? 'Diese Menge ist eine Organisation'
+            ? isExactOrganization
+              ? 'Eingabe ist eine Organisation'
+              : 'Reduzierte Teilmenge ist eine Organisation'
             : 'Keine Organisation gefunden'}
         </div>
         <div className="text-[#c0c0c0] text-sm max-w-sm mx-auto">
+          {isOrganization && !isExactOrganization && (
+            <p className="text-[#ffff00] mb-2 text-xs">
+              Die Startmenge selbst ist <strong>keine</strong> Organisation —
+              nach Entfernen nicht-selbsterhaltender Ressourcen bleibt eine Teilmenge übrig.
+            </p>
+          )}
           Eine Organisation ist eine Ressourcenmenge, die gleichzeitig{' '}
           <span className="text-[#00ff41]">abgeschlossen</span> und{' '}
           <span className="text-[#ffff00]">selbsterhaltend</span> ist.

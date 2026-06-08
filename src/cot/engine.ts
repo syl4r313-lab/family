@@ -35,6 +35,8 @@ export interface COTResult {
   closedSet: ResourceId[];
   organization: ResourceId[] | null;
   isOrganization: boolean;
+  /** True when the closed set itself (without any resource removal) is already the organization */
+  isExactOrganization: boolean;
   trace: TraceStep[];
 }
 
@@ -202,11 +204,18 @@ export function computeOrganization(
     trace.push({ type: 'not_organization', reason: reasons.join('; ') });
   }
 
+  // Was the closed set already the organization (no resources removed)?
+  const isExactOrganization =
+    isOrganization &&
+    current.length === closedSet.length &&
+    current.every(r => closedSet.includes(r));
+
   return {
     startSet: [...startSet],
     closedSet,
     organization: isOrganization ? current : null,
     isOrganization,
+    isExactOrganization,
     trace,
   };
 }
