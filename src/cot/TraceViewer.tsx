@@ -13,19 +13,19 @@ function stepColor(step: TraceStep): string {
     case 'reaction_fires':
     case 'reaction_skipped':
     case 'closure_reached':
-      return 'border-sky-700 bg-sky-900/20';
+      return 'border-[#00ff41]/40 bg-[#0a0a0a]';
     case 'selfmaint_start':
     case 'resource_not_produced':
     case 'resource_removed':
     case 'reaction_disabled':
     case 'selfmaint_reached':
-      return 'border-amber-700 bg-amber-900/20';
+      return 'border-[#ffff00]/40 bg-[#0a0a0a]';
     case 'organization_found':
-      return 'border-emerald-600 bg-emerald-900/20';
+      return 'border-[#00ff41] bg-[#0a0a0a]';
     case 'not_organization':
-      return 'border-rose-700 bg-rose-900/20';
+      return 'border-[#ff0080] bg-[#0a0a0a]';
     default:
-      return 'border-slate-700 bg-slate-800/40';
+      return 'border-[#00ff41]/20 bg-[#0a0a0a]';
   }
 }
 
@@ -69,12 +69,12 @@ function stepTitle(step: TraceStep): string {
 
 function ResourceBadge({ r, added, removed }: { r: string; added?: boolean; removed?: boolean }) {
   const cls = added
-    ? 'bg-emerald-800/60 text-emerald-300 border-emerald-600'
+    ? 'bg-black text-[#00ff41] border-[#00ff41]'
     : removed
-    ? 'bg-rose-800/60 text-rose-300 border-rose-600 line-through'
-    : 'bg-slate-700/60 text-slate-300 border-slate-600';
+    ? 'bg-black text-[#ff0080] border-[#ff0080] line-through'
+    : 'bg-black text-[#c0c0c0] border-[#00ff41]/30';
   return (
-    <span className={`text-xs px-2 py-0.5 rounded border ${cls}`}>{r}</span>
+    <span className={`text-xs px-2 py-0.5 rounded border font-mono ${cls}`}>{r}</span>
   );
 }
 
@@ -86,10 +86,10 @@ function StepCard({ step, index }: { step: TraceStep; index: number }) {
       case 'closure_start':
         return (
           <div>
-            <p className="text-slate-400 text-sm mb-2">Startmenge:</p>
+            <p className="text-[#c0c0c0] text-sm mb-2">Startmenge:</p>
             <div className="flex flex-wrap gap-1">
               {step.currentSet.length === 0
-                ? <span className="text-slate-500 text-xs">∅ (leer)</span>
+                ? <span className="text-[#00ff41]/50 text-xs">∅ (leer)</span>
                 : step.currentSet.map(r => <ResourceBadge key={r} r={r} />)}
             </div>
           </div>
@@ -97,10 +97,10 @@ function StepCard({ step, index }: { step: TraceStep; index: number }) {
       case 'reaction_fires':
         return (
           <div className="space-y-2">
-            <p className="text-slate-300 text-sm">{step.reason}</p>
+            <p className="text-[#c0c0c0] text-sm">{step.reason}</p>
             {step.newResources.length > 0 && (
               <div>
-                <span className="text-slate-400 text-xs mr-2">Neu hinzugefügt:</span>
+                <span className="text-[#c0c0c0] text-xs mr-2">Neu hinzugefügt:</span>
                 <div className="inline-flex flex-wrap gap-1">
                   {step.newResources.map(r => <ResourceBadge key={r} r={r} added />)}
                 </div>
@@ -111,10 +111,10 @@ function StepCard({ step, index }: { step: TraceStep; index: number }) {
       case 'reaction_skipped':
         return (
           <div>
-            <p className="text-slate-400 text-sm">{step.reason}</p>
+            <p className="text-[#c0c0c0] text-sm">{step.reason}</p>
             <div className="mt-1 flex flex-wrap gap-1">
               {step.missingInputs.map(r => (
-                <span key={r} className="text-xs px-2 py-0.5 rounded border bg-rose-900/30 text-rose-400 border-rose-700">{r} fehlt</span>
+                <span key={r} className="text-xs px-2 py-0.5 rounded border bg-black text-[#ff0080] border-[#ff0080]">{r} fehlt</span>
               ))}
             </div>
           </div>
@@ -122,7 +122,7 @@ function StepCard({ step, index }: { step: TraceStep; index: number }) {
       case 'closure_reached':
         return (
           <div>
-            <p className="text-slate-400 text-sm mb-2">Abgeschlossene Menge ({step.finalSet.length} Ressourcen):</p>
+            <p className="text-[#c0c0c0] text-sm mb-2">Abgeschlossene Menge ({step.finalSet.length} Ressourcen):</p>
             <div className="flex flex-wrap gap-1">
               {step.finalSet.map(r => <ResourceBadge key={r} r={r} />)}
             </div>
@@ -131,33 +131,33 @@ function StepCard({ step, index }: { step: TraceStep; index: number }) {
       case 'selfmaint_start':
         return (
           <div>
-            <p className="text-slate-400 text-sm mb-2">Prüfe Selbsterhaltung für {step.currentSet.length} Ressourcen:</p>
+            <p className="text-[#c0c0c0] text-sm mb-2">Prüfe Selbsterhaltung für {step.currentSet.length} Ressourcen:</p>
             <div className="flex flex-wrap gap-1">
               {step.currentSet.map(r => <ResourceBadge key={r} r={r} />)}
             </div>
           </div>
         );
       case 'resource_not_produced':
-        return <p className="text-amber-300 text-sm">{step.reason}</p>;
+        return <p className="text-[#ffff00] text-sm">{step.reason}</p>;
       case 'resource_removed':
         return (
           <div>
             <div className="flex items-center gap-2 mb-1">
               <ResourceBadge r={step.resource} removed />
-              <span className="text-slate-400 text-xs">wird aus der Menge entfernt</span>
+              <span className="text-[#c0c0c0] text-xs">wird aus der Menge entfernt</span>
             </div>
-            {step.reason && <p className="text-slate-500 text-xs">{step.reason}</p>}
+            {step.reason && <p className="text-[#00ff41]/50 text-xs">{step.reason}</p>}
           </div>
         );
       case 'reaction_disabled':
-        return <p className="text-slate-400 text-sm">{step.reason}</p>;
+        return <p className="text-[#c0c0c0] text-sm">{step.reason}</p>;
       case 'selfmaint_reached':
         return (
           <div>
-            <p className="text-slate-400 text-sm mb-2">Stabile Menge ({step.finalSet.length} Ressourcen):</p>
+            <p className="text-[#c0c0c0] text-sm mb-2">Stabile Menge ({step.finalSet.length} Ressourcen):</p>
             <div className="flex flex-wrap gap-1">
               {step.finalSet.length === 0
-                ? <span className="text-rose-400 text-xs">∅ (leer)</span>
+                ? <span className="text-[#ff0080] text-xs">∅ (leer)</span>
                 : step.finalSet.map(r => <ResourceBadge key={r} r={r} />)}
             </div>
           </div>
@@ -165,10 +165,10 @@ function StepCard({ step, index }: { step: TraceStep; index: number }) {
       case 'organization_check':
         return (
           <div className="space-y-1 text-sm">
-            <div className={`flex items-center gap-2 ${step.closedCheck ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <div className={`flex items-center gap-2 ${step.closedCheck ? 'text-[#00ff41]' : 'text-[#ff0080]'}`}>
               {step.closedCheck ? '✓' : '✗'} Abgeschlossen
             </div>
-            <div className={`flex items-center gap-2 ${step.selfMaintCheck ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <div className={`flex items-center gap-2 ${step.selfMaintCheck ? 'text-[#00ff41]' : 'text-[#ff0080]'}`}>
               {step.selfMaintCheck ? '✓' : '✗'} Selbsterhaltend
             </div>
           </div>
@@ -176,16 +176,16 @@ function StepCard({ step, index }: { step: TraceStep; index: number }) {
       case 'organization_found':
         return (
           <div>
-            <p className="text-emerald-300 text-sm mb-2">Gefundene Organisation ({step.resources.length} Ressourcen):</p>
+            <p className="text-[#00ff41] text-sm mb-2">Gefundene Organisation ({step.resources.length} Ressourcen):</p>
             <div className="flex flex-wrap gap-1">
               {step.resources.map(r => (
-                <span key={r} className="text-xs px-2 py-0.5 rounded border bg-emerald-800/50 text-emerald-300 border-emerald-600">{r}</span>
+                <span key={r} className="text-xs px-2 py-0.5 rounded border bg-black text-[#00ff41] border-[#00ff41]">{r}</span>
               ))}
             </div>
           </div>
         );
       case 'not_organization':
-        return <p className="text-rose-300 text-sm">{step.reason}</p>;
+        return <p className="text-[#ff0080] text-sm">{step.reason}</p>;
       default:
         return null;
     }
@@ -200,14 +200,14 @@ function StepCard({ step, index }: { step: TraceStep; index: number }) {
         <span className="text-base mt-0.5 shrink-0">{stepIcon(step)}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-white font-medium text-sm">{stepTitle(step)}</span>
-            <span className="text-slate-500 text-xs shrink-0">#{index + 1}</span>
+            <span className="text-[#00ff41] font-medium text-sm">{stepTitle(step)}</span>
+            <span className="text-[#00ff41]/50 text-xs shrink-0">#{index + 1}</span>
           </div>
         </div>
-        <span className="text-slate-500 text-xs shrink-0">{expanded ? '▲' : '▼'}</span>
+        <span className="text-[#00ff41]/50 text-xs shrink-0">{expanded ? '▲' : '▼'}</span>
       </button>
       {expanded && (
-        <div className="mt-3 pl-8 border-t border-slate-700/50 pt-3">
+        <div className="mt-3 pl-8 border-t border-[#00ff41]/20 pt-3">
           {renderBody()}
         </div>
       )}
@@ -224,17 +224,17 @@ export default function TraceViewer({ trace }: Props) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-white font-semibold text-lg">Berechnungsprotokoll</h2>
-        <div className="flex gap-1 bg-slate-800 border border-slate-700 rounded-lg p-1">
+        <h2 className="text-[#00ff41] font-semibold text-lg">Berechnungsprotokoll</h2>
+        <div className="flex gap-1 bg-[#0a0a0a] border border-[#00ff41]/30 rounded-lg p-1">
           <button
             onClick={() => setMode('all')}
-            className={`px-3 py-1 text-xs rounded transition-colors ${mode === 'all' ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1 text-xs rounded transition-colors ${mode === 'all' ? 'bg-[#00ff41] text-black text-[#00ff41]' : 'text-[#c0c0c0] hover:text-[#00ff41]'}`}
           >
             Alle Schritte
           </button>
           <button
             onClick={() => { setMode('step'); setCurrentStep(0); }}
-            className={`px-3 py-1 text-xs rounded transition-colors ${mode === 'step' ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1 text-xs rounded transition-colors ${mode === 'step' ? 'bg-[#00ff41] text-black text-[#00ff41]' : 'text-[#c0c0c0] hover:text-[#00ff41]'}`}
           >
             Schritt für Schritt
           </button>
@@ -242,21 +242,21 @@ export default function TraceViewer({ trace }: Props) {
       </div>
 
       {mode === 'step' && (
-        <div className="flex items-center gap-3 mb-4 bg-slate-800 border border-slate-700 rounded-xl p-3">
+        <div className="flex items-center gap-3 mb-4 bg-[#0a0a0a] border border-[#00ff41]/30 rounded-xl p-3">
           <button
             onClick={() => setCurrentStep(s => Math.max(0, s - 1))}
             disabled={currentStep === 0}
-            className="px-3 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 text-white text-sm rounded-lg transition-colors"
+            className="px-3 py-1 bg-black hover:bg-[#00ff4110] disabled:opacity-30 text-[#00ff41] text-sm rounded-lg transition-colors"
           >
             ← Zurück
           </button>
-          <span className="text-slate-400 text-sm flex-1 text-center">
+          <span className="text-[#c0c0c0] text-sm flex-1 text-center">
             Schritt {currentStep + 1} / {trace.length}
           </span>
           <button
             onClick={() => setCurrentStep(s => Math.min(trace.length - 1, s + 1))}
             disabled={currentStep === trace.length - 1}
-            className="px-3 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 text-white text-sm rounded-lg transition-colors"
+            className="px-3 py-1 bg-black hover:bg-[#00ff4110] disabled:opacity-30 text-[#00ff41] text-sm rounded-lg transition-colors"
           >
             Weiter →
           </button>
@@ -272,7 +272,7 @@ export default function TraceViewer({ trace }: Props) {
       {mode === 'step' && currentStep < trace.length - 1 && (
         <button
           onClick={() => setCurrentStep(s => Math.min(trace.length - 1, s + 1))}
-          className="mt-3 w-full py-2 border border-dashed border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 text-sm rounded-xl transition-colors"
+          className="mt-3 w-full py-2 border border-dashed border-[#00ff41]/40 text-[#c0c0c0] hover:text-[#00ff41] hover:border-[#00ff41] text-sm rounded-xl transition-colors"
         >
           Nächster Schritt →
         </button>
