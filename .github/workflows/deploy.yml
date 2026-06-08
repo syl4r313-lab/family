@@ -38,6 +38,7 @@ jobs:
         run: |
           mkdir -p dist/cot
           cp -r dist-cot/* dist/cot/
+          mv dist/cot/index.cot.html dist/cot/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
