@@ -53,6 +53,17 @@ export const abstractNetwork: ReactionNetwork = {
   ],
 };
 
+// A network where no organization exists: linear chain with a sink
+// A → B → C (sink). C is consumed but never reproduced. Cascade empties the set.
+const noOrgNetwork: ReactionNetwork = {
+  resources: ['A', 'B', 'C'],
+  reactions: [
+    { id: 'r1', inputs: ['A'], outputs: ['B'], label: 'A → B' },
+    { id: 'r2', inputs: ['B'], outputs: ['C'], label: 'B → C' },
+    { id: 'r3', inputs: ['C'], outputs: [], label: 'C → ∅ (Senke)' },
+  ],
+};
+
 export const presets: Record<string, { name: string; network: ReactionNetwork; defaultStart: string[] }> = {
   ecosystem: {
     name: 'Ökosystem',
@@ -63,5 +74,10 @@ export const presets: Record<string, { name: string; network: ReactionNetwork; d
     name: 'Abstraktes Netzwerk (Heylighen Table 1)',
     network: abstractNetwork,
     defaultStart: ['a', 'b', 'c'],
+  },
+  noorg: {
+    name: 'Keine Organisation (Senke)',
+    network: noOrgNetwork,
+    defaultStart: ['A', 'B', 'C'],
   },
 };
