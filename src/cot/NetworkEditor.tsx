@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactionNetwork, Reaction, ResourceId, COTResult } from './engine';
+import { closureOf } from './engine';
 import { presets } from './presets';
 
 interface Props {
@@ -366,6 +367,89 @@ function NetworkGraph({ network, startSet, result }: { network: ReactionNetwork;
 }
 
 // ---------------------------------------------------------------------------
+// Live closure preview
+// ---------------------------------------------------------------------------
+
+function ClosurePreview({ network, startSet }: { network: ReactionNetwork; startSet: ResourceId[] }) {
+  if (startSet.length === 0) return null;
+
+  const { closedSet } = closureOf(network, startSet);
+  const added = closedSet.filter(r => !startSet.includes(r));
+  const sourceReactions = network.reactions.filter(r => r.inputs.length === 0);
+
+  // Which reactions caused each added resource?
+  const addedBy: Record<string, string[]> = {};
+  for (const r of added) {
+    const causedBy = network.reactions
+      .filter(rx => rx.outputs.includes(r) && rx.inputs.every(inp => closedSet.includes(inp)))
+      .map(rx => rx.id);
+    addedBy[r] = causedBy;
+  }
+
+  return (
+    <div className="bg-[#0a0a0a] rounded border border-[#ffff00]/30 p-4 space-y-3">
+      <div className="text-[#ffff00] text-xs uppercase tracking-wider font-bold">
+        CLOSURE-VORSCHAU — was die Analyse tatsächlich prüft
+      </div>
+
+      <div className="text-[#c0c0c0] text-xs leading-relaxed">
+        Die Analyse startet mit deiner Startmenge und <span className="text-[#ffff00]">erweitert sie automatisch</span>,
+        indem alle anwendbaren Reaktionen feuern (Closure-Schritt). Erst danach wird Selbsterhaltung geprüft.
+      </div>
+
+      <div className="space-y-1">
+        <div className="text-[#00ff41] text-xs font-bold">Deine Startmenge:</div>
+        <div className="flex flex-wrap gap-1.5">
+          {startSet.map(r => (
+            <span key={r} className="border border-[#00ff41] text-[#00ff41] bg-black text-xs px-2 py-0.5 rounded font-mono">{r}</span>
+          ))}
+        </div>
+      </div>
+
+      {added.length > 0 ? (
+        <div className="space-y-1">
+          <div className="text-[#ffff00] text-xs font-bold">Durch Closure hinzugefügt ({added.length}):</div>
+          <div className="flex flex-wrap gap-1.5">
+            {added.map(r => (
+              <span key={r} title={`hinzugefügt durch: ${addedBy[r]?.join(', ') ?? '?'}`}
+                className="border border-[#ffff00] text-[#ffff00] bg-black text-xs px-2 py-0.5 rounded font-mono cursor-help">
+                +{r}
+                {addedBy[r]?.length ? <span className="text-[#ffff00]/50 ml-1">({addedBy[r].join(',')})</span> : null}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="text-[#00ff41]/60 text-xs">Keine weiteren Ressourcen durch Closure hinzugefügt.</div>
+      )}
+
+      {sourceReactions.length > 0 && (
+        <div className="border border-[#ff0080]/40 rounded p-2 text-xs">
+          <span className="text-[#ff0080] font-bold">⚠ Quell-Reaktionen (immer aktiv): </span>
+          <span className="text-[#c0c0c0]">
+            {sourceReactions.map(r => `${r.id} (∅ → ${r.outputs.join(', ')})`).join(', ')}.
+            Sie feuern immer, egal was in der Startmenge ist.
+          </span>
+        </div>
+      )}
+
+      <div className="border-t border-[#00ff41]/20 pt-2">
+        <div className="text-[#00ff41] text-xs font-bold mb-1">Vollständige Analysemenge ({closedSet.length}):</div>
+        <div className="flex flex-wrap gap-1.5">
+          {closedSet.map(r => (
+            <span key={r} className={`text-xs px-2 py-0.5 rounded font-mono border ${
+              startSet.includes(r)
+                ? 'border-[#00ff41] text-[#00ff41] bg-black'
+                : 'border-[#ffff00] text-[#ffff00] bg-black'
+            }`}>{r}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 
 export default function NetworkEditor({ network, startSet, result, onNetworkChange, onStartSetChange, onAnalyze }: Props) {
   const [activePreset, setActivePreset] = useState<string>('ecosystem');
@@ -446,7 +530,7 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
       {/* Preset selector */}
       <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
         <div className="text-[#00ff41] text-xs uppercase tracking-wider mb-3 font-bold">BEISPIELNETZWERK</div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap mb-2">
           {Object.entries(presets).map(([key, preset]) => (
             <button
               key={key}
@@ -461,6 +545,11 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
             </button>
           ))}
         </div>
+        {presets[activePreset]?.description && (
+          <div className="text-[#c0c0c0] text-xs border-t border-[#00ff41]/20 pt-2">
+            {presets[activePreset].description}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -510,24 +599,32 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
             REAKTIONEN ({network.reactions.length})
           </div>
           <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-            {network.reactions.map(r => (
-              <div
-                key={r.id}
-                className="flex items-center justify-between bg-black border border-[#00ff41]/30 rounded px-3 py-1.5"
-              >
-                <span className="text-xs font-mono text-[#00ff41]">
-                  <span className="text-[#ff0080] mr-2">{r.id}</span>
-                  {reactionToString(r)}
-                </span>
-                <button
-                  onClick={() => removeReaction(r.id)}
-                  className="text-[#ff0080] hover:text-[#ff0080] ml-2 text-sm transition-colors"
-                  title="Entfernen"
+            {network.reactions.map(r => {
+              const isSource = r.inputs.length === 0;
+              const isSink = r.outputs.length === 0;
+              return (
+                <div
+                  key={r.id}
+                  className={`flex items-center justify-between bg-black rounded px-3 py-1.5 border ${
+                    isSource ? 'border-[#ff0080]/60' : isSink ? 'border-[#ffff00]/40' : 'border-[#00ff41]/30'
+                  }`}
                 >
-                  ×
-                </button>
-              </div>
-            ))}
+                  <span className="text-xs font-mono text-[#00ff41] flex items-center gap-1.5">
+                    <span className="text-[#ff0080]">{r.id}</span>
+                    {reactionToString(r)}
+                    {isSource && <span className="text-[#ff0080] text-[10px] border border-[#ff0080]/60 px-1 rounded">QUELLE</span>}
+                    {isSink && <span className="text-[#ffff00] text-[10px] border border-[#ffff00]/60 px-1 rounded">SENKE</span>}
+                  </span>
+                  <button
+                    onClick={() => removeReaction(r.id)}
+                    className="text-[#ff0080] hover:text-[#ff0080] ml-2 text-sm transition-colors"
+                    title="Entfernen"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -569,11 +666,11 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
 
       {/* Start set selector */}
       <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
-        <div className="text-[#00ff41] text-xs uppercase tracking-wider mb-3 font-bold">
+        <div className="text-[#00ff41] text-xs uppercase tracking-wider mb-1 font-bold">
           STARTMENGE WÄHLEN
         </div>
-        <p className="text-[#c0c0c0] text-sm mb-3">
-          Wähle die Ressourcen, von denen die Analyse ausgehen soll:
+        <p className="text-[#c0c0c0] text-xs mb-3">
+          Klicke auf Ressourcen, um sie in die Startmenge aufzunehmen oder zu entfernen.
         </p>
         <div className="flex flex-wrap gap-2 mb-2">
           {network.resources.map(r => (
@@ -591,12 +688,13 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
             </button>
           ))}
         </div>
-        {startSet.length > 0 && (
-          <div className="text-[#00ff41]/50 text-xs mt-1">
-            Gewählt: {startSet.join(', ')}
-          </div>
+        {startSet.length === 0 && (
+          <div className="text-[#ff0080] text-xs mt-1">Keine Ressourcen gewählt — Analyse nicht möglich.</div>
         )}
       </div>
+
+      {/* Live closure preview */}
+      <ClosurePreview network={network} startSet={startSet} />
 
       {/* Network visualization */}
       <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
