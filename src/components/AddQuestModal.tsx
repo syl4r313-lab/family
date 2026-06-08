@@ -18,10 +18,10 @@ const categories: { value: Category; label: string; emoji: string }[] = [
   { value: 'health', label: 'Gesundheit', emoji: '💪' },
 ];
 
-const difficulties: { value: Difficulty; label: string; emoji: string; color: string }[] = [
-  { value: 'easy', label: 'Einfach', emoji: '🟢', color: 'border-green-500/60 bg-green-500/20 text-green-300' },
-  { value: 'medium', label: 'Mittel', emoji: '🟡', color: 'border-yellow-500/60 bg-yellow-500/20 text-yellow-300' },
-  { value: 'hard', label: 'Schwer', emoji: '🔴', color: 'border-red-500/60 bg-red-500/20 text-red-300' },
+const difficulties: { value: Difficulty; label: string; dot: string; active: string }[] = [
+  { value: 'easy', label: 'Einfach', dot: '🟢', active: 'bg-emerald-50 border-emerald-300 text-emerald-700' },
+  { value: 'medium', label: 'Mittel', dot: '🟡', active: 'bg-amber-50 border-amber-300 text-amber-700' },
+  { value: 'hard', label: 'Schwer', dot: '🔴', active: 'bg-red-50 border-red-300 text-red-700' },
 ];
 
 export default function AddQuestModal({ visible, members, onClose }: AddQuestModalProps) {
@@ -47,7 +47,6 @@ export default function AddQuestModal({ visible, members, onClose }: AddQuestMod
       category,
       dueDate: dueDate || null,
     });
-    // Reset
     setTitle('');
     setDescription('');
     setAssigneeId('');
@@ -67,70 +66,68 @@ export default function AddQuestModal({ visible, members, onClose }: AddQuestMod
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
           onClick={onClose}
         >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/40" />
 
-          {/* Modal */}
           <motion.div
             initial={{ y: '100%', opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-            className="relative w-full max-w-lg glass-card p-6 z-10 max-h-[90dvh] overflow-y-auto"
+            className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 z-10 max-h-[90dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-bold text-white">Neue Quest</h2>
-                <p className="text-gray-400 text-sm">Erstelle eine neue Aufgabe</p>
+                <h2 className="text-xl font-bold text-gray-900">Neue Quest</h2>
+                <p className="text-gray-500 text-sm">Erstelle eine neue Aufgabe</p>
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
               >
-                <X size={16} className="text-gray-400" />
+                <X size={16} className="text-gray-500" />
               </button>
             </div>
 
-            {/* Form */}
             <div className="space-y-5">
               {/* Title */}
               <div>
-                <label className="text-sm text-gray-400 font-medium mb-2 block">Quest-Name *</label>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Quest-Name *</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Was ist die Aufgabe?"
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500/60 transition-colors"
+                  className="input-field"
+                  autoFocus
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="text-sm text-gray-400 font-medium mb-2 block">Beschreibung</label>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Beschreibung</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Genauere Details..."
                   rows={2}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500/60 transition-colors resize-none"
+                  className="input-field resize-none"
                 />
               </div>
 
               {/* Category */}
               <div>
-                <label className="text-sm text-gray-400 font-medium mb-2 block">Kategorie</label>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Kategorie</label>
                 <div className="flex flex-wrap gap-2">
                   {categories.map((cat) => (
                     <button
                       key={cat.value}
                       onClick={() => setCategory(cat.value)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
                         category === cat.value
-                          ? 'border-purple-500/60 bg-purple-500/20 text-purple-300'
-                          : 'border-white/20 bg-white/5 text-gray-400 hover:bg-white/10'
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
                       {cat.emoji} {cat.label}
@@ -141,45 +138,43 @@ export default function AddQuestModal({ visible, members, onClose }: AddQuestMod
 
               {/* Difficulty */}
               <div>
-                <label className="text-sm text-gray-400 font-medium mb-2 block">Schwierigkeit</label>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Schwierigkeit</label>
                 <div className="flex gap-2">
                   {difficulties.map((diff) => (
                     <button
                       key={diff.value}
                       onClick={() => setDifficulty(diff.value)}
-                      className={`flex-1 flex flex-col items-center gap-1 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
+                      className={`flex-1 flex flex-col items-center gap-1 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
                         difficulty === diff.value
-                          ? diff.color
-                          : 'border-white/20 bg-white/5 text-gray-400 hover:bg-white/10'
+                          ? diff.active
+                          : 'border-gray-200 text-gray-500 hover:bg-gray-50'
                       }`}
                     >
-                      <span>{diff.emoji}</span>
+                      <span>{diff.dot}</span>
                       <span className="text-xs">{diff.label}</span>
                     </button>
                   ))}
                 </div>
-
-                {/* XP Preview */}
-                <div className="mt-2 flex items-center gap-1.5 text-yellow-400 text-sm">
-                  <Zap size={14} />
+                <div className="mt-2 flex items-center gap-1.5 text-amber-600 text-sm">
+                  <Zap size={13} className="text-amber-500" />
                   <span className="font-bold">{xpReward} XP</span>
-                  <span className="text-gray-500">Belohnung</span>
+                  <span className="text-gray-400">Belohnung</span>
                 </div>
               </div>
 
               {/* Assignee */}
               <div>
-                <label className="text-sm text-gray-400 font-medium mb-2 flex items-center gap-1.5">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                   <Users size={13} />
                   Zugewiesen an
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setAssigneeId('')}
-                    className={`px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
+                    className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
                       assigneeId === ''
-                        ? 'border-purple-500/60 bg-purple-500/20 text-purple-300'
-                        : 'border-white/20 bg-white/5 text-gray-400 hover:bg-white/10'
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     Alle
@@ -188,13 +183,19 @@ export default function AddQuestModal({ visible, members, onClose }: AddQuestMod
                     <button
                       key={m.id}
                       onClick={() => setAssigneeId(m.id)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
                         assigneeId === m.id
-                          ? 'border-purple-500/60 bg-purple-500/20 text-purple-300'
-                          : 'border-white/20 bg-white/5 text-gray-400 hover:bg-white/10'
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      <span>{m.avatar}</span>
+                      <div className="w-5 h-5 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                        {m.avatarType === 'photo' ? (
+                          <img src={m.avatar} alt={m.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xs">{m.avatar}</span>
+                        )}
+                      </div>
                       <span>{m.name}</span>
                     </button>
                   ))}
@@ -203,7 +204,7 @@ export default function AddQuestModal({ visible, members, onClose }: AddQuestMod
 
               {/* Due Date */}
               <div>
-                <label className="text-sm text-gray-400 font-medium mb-2 flex items-center gap-1.5">
+                <label className="text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
                   <Calendar size={13} />
                   Fälligkeitsdatum
                 </label>
@@ -211,8 +212,7 @@ export default function AddQuestModal({ visible, members, onClose }: AddQuestMod
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white outline-none focus:border-purple-500/60 transition-colors"
-                  style={{ colorScheme: 'dark' }}
+                  className="input-field"
                 />
               </div>
 
@@ -222,10 +222,8 @@ export default function AddQuestModal({ visible, members, onClose }: AddQuestMod
                 whileTap={{ scale: 0.98 }}
                 onClick={handleSubmit}
                 disabled={!title.trim()}
-                className={`w-full py-3 rounded-xl font-bold text-base transition-all ${
-                  title.trim()
-                    ? 'btn-primary shadow-glow-purple'
-                    : 'bg-white/10 text-gray-500 cursor-not-allowed'
+                className={`w-full py-3 rounded-lg font-bold text-base transition-all ${
+                  title.trim() ? 'btn-primary' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
                 Quest erstellen ⚔️

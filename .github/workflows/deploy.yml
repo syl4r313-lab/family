@@ -1,4 +1,4 @@
-name: Deploy FamilyQuest to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -28,8 +28,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build Family Quest app
         run: npm run build
+
+      - name: Build COT Explorer app
+        run: npm run build:cot
+
+      - name: Merge build outputs
+        run: |
+          mkdir -p dist/cot
+          cp -r dist-cot/* dist/cot/
 
       - uses: actions/upload-pages-artifact@v3
         with:

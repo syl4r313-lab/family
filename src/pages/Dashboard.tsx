@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trophy, Zap, Target, TrendingUp } from 'lucide-react';
+import { Plus, Trophy, Zap, Target, TrendingUp, Pencil, Check, X } from 'lucide-react';
 import { useFamilyStore, xpForNextLevel } from '../store/useFamilyStore';
-import MemberCard from '../components/MemberCard';
 import QuestCard from '../components/QuestCard';
 import GoalCard from '../components/GoalCard';
 import AddQuestModal from '../components/AddQuestModal';
 import LevelUpModal from '../components/LevelUpModal';
 import Confetti from '../components/Confetti';
+import ContributeModal from '../components/ContributeModal';
+import type { FamilyGoal } from '../types';
 
 interface CompletionResult {
   xpGained: number;
@@ -18,20 +19,21 @@ interface CompletionResult {
 
 const containerVariants = {
   hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.08 },
-  },
+  visible: { transition: { staggerChildren: 0.07 } },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0 },
 };
 
 export default function Dashboard() {
-  const { members, quests, goals, familyName, familyXP, familyLevel } = useFamilyStore();
+  const { members, quests, goals, familyName, familyXP, familyLevel, setFamilyName } = useFamilyStore();
   const [showAddQuest, setShowAddQuest] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(familyName);
+  const [contributeGoal, setContributeGoal] = useState<FamilyGoal | null>(null);
   const [levelUpData, setLevelUpData] = useState<{
     visible: boolean;
     memberName: string;
@@ -54,7 +56,7 @@ export default function Dashboard() {
   const familyCurrentLevelXP = xpForNextLevel(familyLevel - 1);
   const familyProgress = Math.min(
     100,
-    ((familyXP - familyCurrentLevelXP) / (familyNextLevelXP - familyCurrentLevelXP)) * 100
+    ((familyXP - familyCurrentLevelXP) / Math.max(familyNextLevelXP - familyCurrentLevelXP, 1)) * 100
   );
 
   const handleQuestComplete = (result: CompletionResult) => {
@@ -73,20 +75,20 @@ export default function Dashboard() {
     }
   };
 
+  const saveName = () => {
+    if (nameInput.trim()) setFamilyName(nameInput.trim());
+    setEditingName(false);
+  };
+
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="px-4 pt-6 pb-4 max-w-lg mx-auto space-y-6"
+      className="px-4 pt-6 pb-4 max-w-lg mx-auto space-y-5"
     >
-      {/* Modals & Effects */}
       <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
-      <AddQuestModal
-        visible={showAddQuest}
-        members={members}
-        onClose={() => setShowAddQuest(false)}
-      />
+      <AddQuestModal visible={showAddQuest} members={members} onClose={() => setShowAddQuest(false)} />
       <LevelUpModal
         visible={levelUpData.visible}
         memberName={levelUpData.memberName}
@@ -95,38 +97,68 @@ export default function Dashboard() {
         xpGained={levelUpData.xpGained}
         onClose={() => setLevelUpData((d) => ({ ...d, visible: false }))}
       />
+      <ContributeModal
+        goal={contributeGoal}
+        members={members}
+        onClose={() => setContributeGoal(null)}
+        onSuccess={() => setShowConfetti(true)}
+      />
 
       {/* Family Header */}
-      <motion.div variants={itemVariants} className="glass-card p-5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-blue-600/10 to-pink-600/10 pointer-events-none" />
+      <motion.div variants={itemVariants} className="card p-5 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-violet-50 pointer-events-none" />
 
-        <div className="flex items-center justify-between mb-1">
-          <div>
-            <h1 className="text-2xl font-black gradient-text">{familyName}</h1>
-            <p className="text-gray-400 text-sm">Familien-Dashboard</p>
+        <div className="flex items-start justify-between mb-4 relative">
+          <div className="flex-1">
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && saveName()}
+                  className="input-field text-xl font-black py-1 px-2"
+                  autoFocus
+                />
+                <button onClick={saveName} className="w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center text-white">
+                  <Check size={13} />
+                </button>
+                <button onClick={() => { setEditingName(false); setNameInput(familyName); }} className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+                  <X size={13} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-black text-gradient-mint">{familyName}</h1>
+                <button
+                  onClick={() => { setEditingName(true); setNameInput(familyName); }}
+                  className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                >
+                  <Pencil size={12} className="text-gray-500" />
+                </button>
+              </div>
+            )}
+            <p className="text-gray-500 text-sm mt-0.5">Familien-Dashboard</p>
           </div>
-          <div className="text-right">
+          <div className="text-right shrink-0">
             <div className="flex items-center gap-1.5 justify-end">
-              <Trophy size={16} className="text-yellow-400" />
-              <span className="text-yellow-400 font-black text-xl">Lv.{familyLevel}</span>
+              <Trophy size={16} className="text-amber-500" />
+              <span className="text-amber-500 font-black text-xl">Lv.{familyLevel}</span>
             </div>
-            <div className="text-gray-500 text-xs">{familyXP.toLocaleString()} XP gesamt</div>
+            <div className="text-gray-400 text-xs">{familyXP.toLocaleString()} XP</div>
           </div>
         </div>
 
         {/* Family XP bar */}
-        <div className="mt-3">
-          <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+        <div>
+          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500 rounded-full relative overflow-hidden"
+              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${familyProgress}%` }}
-              transition={{ duration: 1.5, ease: 'easeOut', delay: 0.2 }}
-            >
-              <div className="absolute inset-0 shimmer" />
-            </motion.div>
+              transition={{ duration: 1.4, ease: 'easeOut', delay: 0.2 }}
+            />
           </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <div className="flex justify-between text-xs text-gray-400 mt-1">
             <span>Level {familyLevel}</span>
             <span>Level {familyLevel + 1} bei {familyNextLevelXP.toLocaleString()} XP</span>
           </div>
@@ -134,48 +166,83 @@ export default function Dashboard() {
 
         {/* Quick stats */}
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="bg-black/20 rounded-xl p-3 text-center">
-            <div className="text-2xl font-black text-purple-400">{members.length}</div>
+          <div className="bg-violet-50 rounded-xl p-3 text-center border border-violet-100">
+            <div className="text-xl font-black text-violet-600">{members.length}</div>
             <div className="text-gray-500 text-xs">Mitglieder</div>
           </div>
-          <div className="bg-black/20 rounded-xl p-3 text-center">
-            <div className="text-2xl font-black text-green-400">{totalCompleted}</div>
+          <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
+            <div className="text-xl font-black text-emerald-600">{totalCompleted}</div>
             <div className="text-gray-500 text-xs">Erledigt</div>
           </div>
-          <div className="bg-black/20 rounded-xl p-3 text-center">
-            <div className="text-2xl font-black text-blue-400">{todayCompleted}</div>
+          <div className="bg-amber-50 rounded-xl p-3 text-center border border-amber-100">
+            <div className="text-xl font-black text-amber-600">{todayCompleted}</div>
             <div className="text-gray-500 text-xs">Heute</div>
           </div>
         </div>
       </motion.div>
 
       {/* Leaderboard */}
-      <motion.div variants={itemVariants}>
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp size={18} className="text-yellow-400" />
-          <h2 className="text-lg font-bold text-white">Rangliste dieser Woche</h2>
-        </div>
-        <div className="space-y-2">
-          {sortedMembers.map((member, index) => (
-            <MemberCard key={member.id} member={member} rank={index} compact />
-          ))}
-        </div>
-      </motion.div>
+      {sortedMembers.length > 0 && (
+        <motion.div variants={itemVariants}>
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp size={17} className="text-amber-500" />
+            <h2 className="text-base font-bold text-gray-800">Rangliste</h2>
+          </div>
+          <div className="space-y-2">
+            {sortedMembers.map((member, index) => (
+              <motion.div
+                key={member.id}
+                whileHover={{ scale: 1.01 }}
+                className="card px-4 py-3 flex items-center gap-3"
+              >
+                <span className="text-lg w-6 text-center">
+                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                </span>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
+                  {member.avatarType === 'photo' ? (
+                    <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xl">{member.avatar}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm text-gray-900 truncate">{member.name}</span>
+                    <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold shrink-0">
+                      Lv.{member.level}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full mt-1.5 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full"
+                      style={{ width: `${Math.min(100, (member.xp / Math.max(xpForNextLevel(member.level), 1)) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-amber-500 font-bold text-sm">{member.xp.toLocaleString()}</div>
+                  <div className="text-gray-400 text-xs">XP</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
-      {/* Today's Quests */}
+      {/* Active Quests */}
       <motion.div variants={itemVariants}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Zap size={18} className="text-purple-400" />
-            <h2 className="text-lg font-bold text-white">Aktive Quests</h2>
+            <Zap size={17} className="text-emerald-500" />
+            <h2 className="text-base font-bold text-gray-800">Aktive Quests</h2>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowAddQuest(true)}
-            className="flex items-center gap-1.5 text-sm bg-purple-600/30 hover:bg-purple-600/40 border border-purple-500/30 text-purple-300 px-3 py-1.5 rounded-full transition-colors"
+            className="flex items-center gap-1.5 text-sm bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-full transition-colors font-medium"
           >
-            <Plus size={14} />
+            <Plus size={13} />
             Neu
           </motion.button>
         </div>
@@ -183,19 +250,14 @@ export default function Dashboard() {
         {activeQuests.length > 0 ? (
           <div className="space-y-3">
             {activeQuests.map((quest) => (
-              <QuestCard
-                key={quest.id}
-                quest={quest}
-                members={members}
-                onComplete={handleQuestComplete}
-              />
+              <QuestCard key={quest.id} quest={quest} members={members} onComplete={handleQuestComplete} />
             ))}
           </div>
         ) : (
-          <div className="glass-card p-8 text-center">
+          <div className="card p-8 text-center">
             <div className="text-4xl mb-2">🎉</div>
-            <p className="text-white font-bold">Alle Quests erledigt!</p>
-            <p className="text-gray-400 text-sm mt-1">Super, die Familie ist topfit!</p>
+            <p className="text-gray-800 font-bold">Alle Quests erledigt!</p>
+            <p className="text-gray-500 text-sm mt-1">Super, die Familie ist topfit!</p>
           </div>
         )}
       </motion.div>
@@ -204,25 +266,28 @@ export default function Dashboard() {
       {activeGoals.length > 0 && (
         <motion.div variants={itemVariants}>
           <div className="flex items-center gap-2 mb-3">
-            <Target size={18} className="text-blue-400" />
-            <h2 className="text-lg font-bold text-white">Familienziele</h2>
+            <Target size={17} className="text-violet-500" />
+            <h2 className="text-base font-bold text-gray-800">Familienziele</h2>
           </div>
           <div className="space-y-3">
             {activeGoals.map((goal) => (
-              <GoalCard key={goal.id} goal={goal} />
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                onContribute={() => setContributeGoal(goal)}
+              />
             ))}
           </div>
         </motion.div>
       )}
 
-      {/* Quick Add FAB */}
+      {/* FAB */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setShowAddQuest(true)}
-        className="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full shadow-glow-purple flex items-center justify-center z-30"
-        animate={{ boxShadow: ['0 0 20px rgba(139,92,246,0.5)', '0 0 35px rgba(139,92,246,0.8)', '0 0 20px rgba(139,92,246,0.5)'] }}
-        transition={{ duration: 2, repeat: Infinity }}
+        className="fixed bottom-24 right-4 w-14 h-14 btn-primary rounded-full shadow-lg flex items-center justify-center z-30"
+        style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}
       >
         <Plus size={24} className="text-white" />
       </motion.button>

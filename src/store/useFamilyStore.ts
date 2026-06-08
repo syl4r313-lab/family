@@ -58,227 +58,6 @@ function checkBadges(member: FamilyMember): Badge[] {
   return newBadges;
 }
 
-const defaultMembers: FamilyMember[] = [
-  {
-    id: 'papa',
-    name: 'Papa',
-    avatar: '👨',
-    role: 'parent',
-    xp: 450,
-    level: calculateLevel(450),
-    streak: 3,
-    lastActiveDate: new Date().toISOString().split('T')[0],
-    completedQuests: 9,
-    badges: [
-      { id: 'first-quest', name: 'Erste Quest', emoji: '⭐', description: 'Erste Quest abgeschlossen!', unlockedAt: new Date().toISOString() },
-      { id: 'quest-5', name: 'Quester', emoji: '🌟', description: '5 Quests abgeschlossen!', unlockedAt: new Date().toISOString() },
-      { id: 'streak-3', name: 'Auf Kurs', emoji: '🔥', description: '3 Tage Streak!', unlockedAt: new Date().toISOString() },
-    ],
-  },
-  {
-    id: 'mama',
-    name: 'Mama',
-    avatar: '👩',
-    role: 'parent',
-    xp: 520,
-    level: calculateLevel(520),
-    streak: 5,
-    lastActiveDate: new Date().toISOString().split('T')[0],
-    completedQuests: 11,
-    badges: [
-      { id: 'first-quest', name: 'Erste Quest', emoji: '⭐', description: 'Erste Quest abgeschlossen!', unlockedAt: new Date().toISOString() },
-      { id: 'quest-5', name: 'Quester', emoji: '🌟', description: '5 Quests abgeschlossen!', unlockedAt: new Date().toISOString() },
-      { id: 'quest-10', name: 'Quest-Meister', emoji: '💫', description: '10 Quests abgeschlossen!', unlockedAt: new Date().toISOString() },
-      { id: 'xp-500', name: 'XP-Sammler', emoji: '💎', description: '500 XP gesammelt!', unlockedAt: new Date().toISOString() },
-      { id: 'streak-3', name: 'Auf Kurs', emoji: '🔥', description: '3 Tage Streak!', unlockedAt: new Date().toISOString() },
-    ],
-  },
-  {
-    id: 'tim',
-    name: 'Tim',
-    avatar: '👦',
-    role: 'child',
-    xp: 320,
-    level: calculateLevel(320),
-    streak: 2,
-    lastActiveDate: new Date().toISOString().split('T')[0],
-    completedQuests: 7,
-    badges: [
-      { id: 'first-quest', name: 'Erste Quest', emoji: '⭐', description: 'Erste Quest abgeschlossen!', unlockedAt: new Date().toISOString() },
-      { id: 'quest-5', name: 'Quester', emoji: '🌟', description: '5 Quests abgeschlossen!', unlockedAt: new Date().toISOString() },
-    ],
-  },
-  {
-    id: 'lena',
-    name: 'Lena',
-    avatar: '👧',
-    role: 'child',
-    xp: 280,
-    level: calculateLevel(280),
-    streak: 1,
-    lastActiveDate: new Date().toISOString().split('T')[0],
-    completedQuests: 5,
-    badges: [
-      { id: 'first-quest', name: 'Erste Quest', emoji: '⭐', description: 'Erste Quest abgeschlossen!', unlockedAt: new Date().toISOString() },
-      { id: 'quest-5', name: 'Quester', emoji: '🌟', description: '5 Quests abgeschlossen!', unlockedAt: new Date().toISOString() },
-    ],
-  },
-];
-
-const defaultQuests: Quest[] = [
-  {
-    id: 'q1',
-    title: 'Zimmer aufräumen',
-    description: 'Spielzeug wegräumen, Boden fegen und Schreibtisch aufräumen',
-    assigneeId: 'tim',
-    xpReward: 50,
-    difficulty: 'easy',
-    category: 'chores',
-    dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    completed: false,
-    completedAt: null,
-    completedBy: null,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'q2',
-    title: 'Hausaufgaben machen',
-    description: 'Mathe und Deutsch Hausaufgaben vollständig erledigen',
-    assigneeId: 'lena',
-    xpReward: 100,
-    difficulty: 'medium',
-    category: 'homework',
-    dueDate: new Date().toISOString().split('T')[0],
-    completed: false,
-    completedAt: null,
-    completedBy: null,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'q3',
-    title: 'Einkaufen gehen',
-    description: 'Wocheneinkauf im Supermarkt erledigen',
-    assigneeId: 'mama',
-    xpReward: 100,
-    difficulty: 'medium',
-    category: 'errands',
-    dueDate: new Date().toISOString().split('T')[0],
-    completed: false,
-    completedAt: null,
-    completedBy: null,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'q4',
-    title: 'Rasen mähen',
-    description: 'Den Garten in Ordnung bringen und Rasen mähen',
-    assigneeId: 'papa',
-    xpReward: 200,
-    difficulty: 'hard',
-    category: 'chores',
-    dueDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-    completed: false,
-    completedAt: null,
-    completedBy: null,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'q5',
-    title: 'Fahrrad fahren',
-    description: '30 Minuten Fahrrad fahren für Bewegung',
-    assigneeId: null,
-    xpReward: 50,
-    difficulty: 'easy',
-    category: 'health',
-    dueDate: new Date().toISOString().split('T')[0],
-    completed: false,
-    completedAt: null,
-    completedBy: null,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'q6',
-    title: 'Familienspiel-Abend',
-    description: 'Brettspiel zusammen spielen und Spaß haben',
-    assigneeId: null,
-    xpReward: 50,
-    difficulty: 'easy',
-    category: 'fun',
-    dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    completed: false,
-    completedAt: null,
-    completedBy: null,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'q7',
-    title: 'Mathe üben',
-    description: 'Einmaleins bis 10 auswendig lernen',
-    assigneeId: 'tim',
-    xpReward: 100,
-    difficulty: 'medium',
-    category: 'homework',
-    dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-    completed: false,
-    completedAt: null,
-    completedBy: null,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'q8',
-    title: 'Küche putzen',
-    description: 'Küche gründlich sauber machen, inkl. Herd und Spüle',
-    assigneeId: null,
-    xpReward: 200,
-    difficulty: 'hard',
-    category: 'chores',
-    dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    completed: false,
-    completedAt: null,
-    completedBy: null,
-    createdAt: new Date().toISOString(),
-  },
-];
-
-const defaultGoals: FamilyGoal[] = [
-  {
-    id: 'g1',
-    title: 'Sommerurlaub',
-    description: 'Zusammen Urlaub machen und eine tolle Zeit verbringen',
-    emoji: '🏖️',
-    type: 'vacation',
-    targetXP: 2000,
-    currentXP: 850,
-    targetDate: new Date(Date.now() + 60 * 86400000).toISOString().split('T')[0],
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'g2',
-    title: 'Neues Fahrrad',
-    description: 'Für Tim ein neues Fahrrad ersparen',
-    emoji: '🚲',
-    type: 'savings',
-    targetXP: 1500,
-    currentXP: 620,
-    targetDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'g3',
-    title: 'Familienfilm-Abend',
-    description: 'Einen ganzen Abend zusammen Filme schauen mit Popcorn',
-    emoji: '🎬',
-    type: 'challenge',
-    targetXP: 500,
-    currentXP: 380,
-    targetDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-];
-
 const defaultRewards: Reward[] = [
   {
     id: 'r1',
@@ -331,6 +110,7 @@ const defaultRewards: Reward[] = [
 ];
 
 interface StoreState {
+  isOnboarded: boolean;
   members: FamilyMember[];
   quests: Quest[];
   goals: FamilyGoal[];
@@ -338,11 +118,14 @@ interface StoreState {
   familyName: string;
   familyXP: number;
   familyLevel: number;
+  setOnboarded: (value: boolean) => void;
+  setFamilyName: (name: string) => void;
   addMember: (member: Omit<FamilyMember, 'id' | 'xp' | 'level' | 'streak' | 'completedQuests' | 'badges' | 'lastActiveDate'>) => void;
+  updateMember: (id: string, updates: Partial<FamilyMember>) => void;
   addQuest: (quest: Omit<Quest, 'id' | 'completed' | 'completedAt' | 'completedBy' | 'createdAt'>) => void;
   completeQuest: (questId: string, memberId: string) => { xpGained: number; leveledUp: boolean; newLevel: number };
-  addGoal: (goal: Omit<FamilyGoal, 'id' | 'currentXP' | 'completed' | 'createdAt'>) => void;
-  contributeToGoal: (goalId: string, xp: number) => void;
+  addGoal: (goal: Omit<FamilyGoal, 'id' | 'currentAmount' | 'completed' | 'createdAt' | 'contributions'>) => void;
+  contributeToGoal: (goalId: string, amount: number, note: string, contributorId: string | null) => void;
   purchaseReward: (rewardId: string, memberId: string) => boolean;
   addReward: (reward: Omit<Reward, 'id'>) => void;
 }
@@ -350,18 +133,27 @@ interface StoreState {
 export const useFamilyStore = create<StoreState>()(
   persist(
     (set, get) => ({
-      members: defaultMembers,
-      quests: defaultQuests,
-      goals: defaultGoals,
+      isOnboarded: false,
+      members: [],
+      quests: [],
+      goals: [],
       rewards: defaultRewards,
-      familyName: 'Die Mustermanns',
-      familyXP: defaultMembers.reduce((sum, m) => sum + m.xp, 0),
+      familyName: '',
+      familyXP: 0,
       familyLevel: 1,
+
+      setOnboarded: (value: boolean) => {
+        set({ isOnboarded: value });
+      },
+
+      setFamilyName: (name: string) => {
+        set({ familyName: name });
+      },
 
       addMember: (memberData) => {
         const newMember: FamilyMember = {
           ...memberData,
-          id: `member-${Date.now()}`,
+          id: `member-${Date.now()}-${Math.random().toString(36).slice(2)}`,
           xp: 0,
           level: 1,
           streak: 0,
@@ -370,6 +162,12 @@ export const useFamilyStore = create<StoreState>()(
           badges: [],
         };
         set((state) => ({ members: [...state.members, newMember] }));
+      },
+
+      updateMember: (id: string, updates: Partial<FamilyMember>) => {
+        set((state) => ({
+          members: state.members.map(m => m.id === id ? { ...m, ...updates } : m),
+        }));
       },
 
       addQuest: (questData) => {
@@ -418,7 +216,7 @@ export const useFamilyStore = create<StoreState>()(
         updatedMember.badges = [...updatedMember.badges, ...newBadges];
 
         const newFamilyXP = state.familyXP + xpGained;
-        const newFamilyLevel = calculateLevel(newFamilyXP / 4); // Average
+        const newFamilyLevel = calculateLevel(newFamilyXP / 4);
 
         set((s) => ({
           quests: s.quests.map(q =>
@@ -431,13 +229,6 @@ export const useFamilyStore = create<StoreState>()(
           familyLevel: newFamilyLevel,
         }));
 
-        // Auto-contribute XP to the nearest goal
-        const activeGoals = get().goals.filter(g => !g.completed);
-        if (activeGoals.length > 0) {
-          const goalToContribute = activeGoals.sort((a, b) => (b.currentXP / b.targetXP) - (a.currentXP / a.targetXP))[0];
-          get().contributeToGoal(goalToContribute.id, Math.floor(xpGained * 0.1));
-        }
-
         return { xpGained, leveledUp, newLevel };
       },
 
@@ -445,21 +236,67 @@ export const useFamilyStore = create<StoreState>()(
         const newGoal: FamilyGoal = {
           ...goalData,
           id: `goal-${Date.now()}`,
-          currentXP: 0,
+          currentAmount: 0,
           completed: false,
           createdAt: new Date().toISOString(),
+          contributions: [],
         };
         set((state) => ({ goals: [...state.goals, newGoal] }));
       },
 
-      contributeToGoal: (goalId: string, xp: number) => {
-        set((state) => ({
-          goals: state.goals.map(g => {
+      contributeToGoal: (goalId: string, amount: number, note: string, contributorId: string | null) => {
+        const state = get();
+        set((s) => ({
+          goals: s.goals.map(g => {
             if (g.id !== goalId || g.completed) return g;
-            const newCurrentXP = Math.min(g.currentXP + xp, g.targetXP);
-            return { ...g, currentXP: newCurrentXP, completed: newCurrentXP >= g.targetXP };
+            const newCurrentAmount = Math.min(g.currentAmount + amount, g.targetAmount);
+            const nowCompleted = newCurrentAmount >= g.targetAmount;
+            const contribution = {
+              id: `contrib-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              amount,
+              note,
+              contributorId,
+              date: new Date().toISOString(),
+            };
+            return {
+              ...g,
+              currentAmount: newCurrentAmount,
+              completed: nowCompleted,
+              contributions: [...g.contributions, contribution],
+            };
           }),
         }));
+
+        // Award XP bonus on completion
+        const updatedGoal = get().goals.find(g => g.id === goalId);
+        if (updatedGoal?.completed && updatedGoal.xpBonusOnComplete > 0) {
+          const members = get().members;
+          if (contributorId) {
+            const member = members.find(m => m.id === contributorId);
+            if (member) {
+              const newXP = member.xp + updatedGoal.xpBonusOnComplete;
+              const newLevel = calculateLevel(newXP);
+              set((s) => ({
+                members: s.members.map(m =>
+                  m.id === contributorId
+                    ? { ...m, xp: newXP, level: newLevel }
+                    : m
+                ),
+                familyXP: state.familyXP + updatedGoal.xpBonusOnComplete,
+              }));
+            }
+          } else {
+            // Award to all members
+            const bonusEach = Math.floor(updatedGoal.xpBonusOnComplete / Math.max(members.length, 1));
+            set((s) => ({
+              members: s.members.map(m => {
+                const newXP = m.xp + bonusEach;
+                return { ...m, xp: newXP, level: calculateLevel(newXP) };
+              }),
+              familyXP: state.familyXP + updatedGoal.xpBonusOnComplete,
+            }));
+          }
+        }
       },
 
       purchaseReward: (rewardId: string, memberId: string) => {
@@ -489,7 +326,7 @@ export const useFamilyStore = create<StoreState>()(
       },
     }),
     {
-      name: 'family-quest-storage',
+      name: 'family-quest-storage-v2',
     }
   )
 );

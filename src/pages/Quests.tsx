@@ -47,16 +47,13 @@ export default function Quests() {
     if (filter === 'completed') return q.completed;
     return q.category === filter;
   }).sort((a, b) => {
-    // Active first, then by creation date
     if (a.completed !== b.completed) return a.completed ? 1 : -1;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   const activeCount = quests.filter((q) => !q.completed).length;
   const completedCount = quests.filter((q) => q.completed).length;
-  const totalXPAvailable = quests
-    .filter((q) => !q.completed)
-    .reduce((sum, q) => sum + q.xpReward, 0);
+  const totalXPAvailable = quests.filter((q) => !q.completed).reduce((sum, q) => sum + q.xpReward, 0);
 
   const handleQuestComplete = (result: CompletionResult) => {
     setShowConfetti(true);
@@ -76,7 +73,6 @@ export default function Quests() {
 
   return (
     <div className="px-4 pt-6 pb-4 max-w-lg mx-auto">
-      {/* Effects */}
       <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
       <AddQuestModal visible={showAddQuest} members={members} onClose={() => setShowAddQuest(false)} />
       <LevelUpModal
@@ -90,14 +86,14 @@ export default function Quests() {
 
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-white">⚔️ Quests</h1>
-            <p className="text-gray-400 text-sm">Alle Familienaufgaben</p>
+            <h1 className="text-2xl font-black text-gray-900">Quests</h1>
+            <p className="text-gray-500 text-sm">Alle Familienaufgaben</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -112,22 +108,22 @@ export default function Quests() {
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="glass-card p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-orange-400 mb-0.5">
+          <div className="card p-3 text-center">
+            <div className="flex items-center justify-center gap-1 text-orange-500 mb-0.5">
               <Clock size={14} />
               <span className="font-black text-lg">{activeCount}</span>
             </div>
             <div className="text-gray-500 text-xs">Offen</div>
           </div>
-          <div className="glass-card p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-green-400 mb-0.5">
+          <div className="card p-3 text-center">
+            <div className="flex items-center justify-center gap-1 text-emerald-600 mb-0.5">
               <CheckCircle size={14} />
               <span className="font-black text-lg">{completedCount}</span>
             </div>
             <div className="text-gray-500 text-xs">Erledigt</div>
           </div>
-          <div className="glass-card p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-yellow-400 mb-0.5">
+          <div className="card p-3 text-center">
+            <div className="flex items-center justify-center gap-1 text-amber-500 mb-0.5">
               <Zap size={14} />
               <span className="font-black text-lg">{totalXPAvailable}</span>
             </div>
@@ -144,7 +140,7 @@ export default function Quests() {
         className="mb-4"
       >
         <div className="flex items-center gap-2 mb-2">
-          <Filter size={14} className="text-gray-400" />
+          <Filter size={13} className="text-gray-400" />
           <span className="text-xs text-gray-400 font-medium">Filter</span>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -154,8 +150,8 @@ export default function Quests() {
               onClick={() => setFilter(f.value)}
               className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                 filter === f.value
-                  ? 'bg-purple-600/30 border-purple-500/60 text-purple-300'
-                  : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                  : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
               }`}
             >
               {f.emoji} {f.label}
@@ -169,23 +165,18 @@ export default function Quests() {
         {filteredQuests.length > 0 ? (
           <div className="space-y-3">
             {filteredQuests.map((quest) => (
-              <QuestCard
-                key={quest.id}
-                quest={quest}
-                members={members}
-                onComplete={handleQuestComplete}
-              />
+              <QuestCard key={quest.id} quest={quest} members={members} onComplete={handleQuestComplete} />
             ))}
           </div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="glass-card p-10 text-center"
+            className="card p-10 text-center"
           >
             <div className="text-5xl mb-3">🎯</div>
-            <p className="text-white font-bold text-lg">Keine Quests gefunden</p>
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-gray-800 font-bold text-lg">Keine Quests gefunden</p>
+            <p className="text-gray-500 text-sm mt-1">
               {filter === 'completed' ? 'Noch nichts erledigt.' : 'Erstelle eine neue Quest!'}
             </p>
             {filter !== 'completed' && (
@@ -208,7 +199,8 @@ export default function Quests() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setShowAddQuest(true)}
-        className="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full shadow-glow-purple flex items-center justify-center z-30"
+        className="fixed bottom-24 right-4 w-14 h-14 btn-primary rounded-full shadow-lg flex items-center justify-center z-30"
+        style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}
       >
         <Plus size={24} className="text-white" />
       </motion.button>
