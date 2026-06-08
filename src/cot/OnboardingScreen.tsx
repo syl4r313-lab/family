@@ -92,7 +92,7 @@ const slides = [
 
 function ClosureAnimation() {
   const [step, setStep] = useState(0);
-  const steps = [
+  const steps: { set: string[]; fired: string | null; added: string[] }[] = [
     { set: ['plants', 'sunlight', 'CO2'], fired: null, added: [] },
     { set: ['plants', 'sunlight', 'CO2', 'oxygen', 'heat'], fired: 'Photosynthese', added: ['oxygen', 'heat'] },
   ];
