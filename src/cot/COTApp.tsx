@@ -35,42 +35,45 @@ export default function COTApp() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-black text-[#c0c0c0] font-mono">
       {/* Top bar */}
-      <header className="border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+      <header className="border-b border-[#00ff41]/30 px-4 py-3 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
         <div>
-          <div className="text-lg font-bold text-white leading-none">COT Explorer</div>
-          <div className="text-slate-500 text-xs">Chemical Organization Theory</div>
+          <div className="text-lg font-bold text-[#00ff41] leading-none" style={{ textShadow: '0 0 6px #00ff41' }}>
+            &gt; COT_EXPLORER
+          </div>
+          <div className="text-[#00ff41]/50 text-xs">Chemical Organization Theory</div>
         </div>
         <button
           onClick={() => {
             localStorage.removeItem(ONBOARDING_KEY);
             setOnboardingDone(false);
           }}
-          className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
+          className="border border-[#ff0080] text-[#ff0080] hover:bg-[#ff008020] text-xs px-2 py-1 rounded transition-colors"
           title="Einführung erneut anzeigen"
         >
-          ? Hilfe
+          ? HILFE
         </button>
       </header>
 
       {/* Tabs */}
-      <nav className="border-b border-slate-800 px-4">
+      <nav className="border-b border-[#00ff41]/30 px-4">
         <div className="flex gap-1 -mb-px">
           {[
-            { key: 'editor', label: 'Netzwerk' },
-            { key: 'trace', label: 'Protokoll', disabled: !result },
-            { key: 'result', label: 'Ergebnis', disabled: !result },
+            { key: 'editor', label: 'NETZWERK' },
+            { key: 'trace', label: 'PROTOKOLL', disabled: !result },
+            { key: 'result', label: 'ERGEBNIS', disabled: !result },
           ].map(({ key, label, disabled }) => (
             <button
               key={key}
               disabled={disabled}
               onClick={() => setActiveTab(key as typeof activeTab)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+              className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                 activeTab === key
-                  ? 'border-sky-500 text-sky-400'
-                  : 'border-transparent text-slate-400 hover:text-white'
+                  ? 'border-[#00ff41] text-[#00ff41]'
+                  : 'border-transparent text-[#00ff41]/40 hover:text-[#00ff41]'
               }`}
+              style={activeTab === key ? { textShadow: '0 0 6px #00ff41' } : undefined}
             >
               {label}
             </button>
@@ -84,6 +87,7 @@ export default function COTApp() {
           <NetworkEditor
             network={network}
             startSet={startSet}
+            result={result}
             onNetworkChange={setNetwork}
             onStartSetChange={setStartSet}
             onAnalyze={handleAnalyze}
@@ -100,15 +104,15 @@ export default function COTApp() {
             <div className="flex gap-3">
               <button
                 onClick={() => setActiveTab('result')}
-                className="flex-1 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium rounded-xl transition-colors"
+                className="flex-1 py-2 bg-[#00ff41] text-black font-bold text-sm rounded hover:bg-[#00cc33] transition-colors"
               >
-                Zum Ergebnis →
+                ZUM ERGEBNIS →
               </button>
               <button
                 onClick={() => setActiveTab('editor')}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-xl transition-colors"
+                className="px-4 py-2 border border-[#ff0080] text-[#ff0080] hover:bg-[#ff008020] text-sm rounded transition-colors"
               >
-                ← Editor
+                ← EDITOR
               </button>
             </div>
           </div>
@@ -119,9 +123,9 @@ export default function COTApp() {
             <ResultPanel result={result} />
             <button
               onClick={() => setActiveTab('editor')}
-              className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-xl transition-colors"
+              className="w-full py-2 border border-[#ff0080] text-[#ff0080] hover:bg-[#ff008020] text-sm rounded transition-colors"
             >
-              ← Zurück zum Editor
+              ← ZURÜCK ZUM EDITOR
             </button>
           </div>
         )}
