@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:cot": "vite build --config vite.cot.config.ts",
+    "build:all": "npm run build && npm run build:cot",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:cot": "vite preview --config vite.cot.config.ts"
   },
   "dependencies": {
     "framer-motion": "^11.0.0",
