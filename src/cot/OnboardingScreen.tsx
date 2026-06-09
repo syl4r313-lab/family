@@ -88,6 +88,49 @@ const slides = [
       </div>
     ),
   },
+  {
+    title: 'COT vs. Prolog — zwei Arten zu denken',
+    content: (
+      <div className="space-y-3">
+        <p className="text-[#c0c0c0] text-sm leading-relaxed">
+          Beide Systeme modellieren Wissen als Regeln — aber mit unterschiedlicher Logik:
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-black rounded-lg p-3 border border-[#00ff41]/40 space-y-2">
+            <div className="text-[#00ff41] font-bold text-sm">COT</div>
+            <div className="text-[#c0c0c0] text-xs space-y-1">
+              <div>• Ressourcen &amp; Reaktionen</div>
+              <div>• Alles gleichzeitig aktiv</div>
+              <div>• Fragt: <em>Was ist stabil?</em></div>
+              <div>• Kein Backtracking</div>
+            </div>
+            <div className="font-mono text-[#00ff41] text-xs mt-2 bg-[#0a0a0a] rounded p-2">
+              A + B → C<br />
+              C → A
+            </div>
+          </div>
+          <div className="bg-black rounded-lg p-3 border border-[#ff0080]/40 space-y-2">
+            <div className="text-[#ff0080] font-bold text-sm">Prolog</div>
+            <div className="text-[#c0c0c0] text-xs space-y-1">
+              <div>• Fakten &amp; Horn-Klauseln</div>
+              <div>• Sequenziell, eine Antwort</div>
+              <div>• Fragt: <em>Was ist ableitbar?</em></div>
+              <div>• Tiefensuche + Backtracking</div>
+            </div>
+            <div className="font-mono text-[#ff0080] text-xs mt-2 bg-[#0a0a0a] rounded p-2">
+              c :- a, b.<br />
+              a :- c.
+            </div>
+          </div>
+        </div>
+        <div className="bg-[#0a0a0a] rounded-lg p-3 border border-[#ffff00]/30 text-xs text-[#c0c0c0] space-y-1">
+          <div className="text-[#ffff00] font-bold mb-1">Entscheidender Unterschied</div>
+          <div>Prolog sucht einen <span className="text-[#ff0080]">Beweis</span> für eine Anfrage — deduktiv, sequenziell.</div>
+          <div>COT fragt, ob ein <span className="text-[#00ff41]">Zustand</span> sich selbst erhält — dynamisch, systemisch.</div>
+        </div>
+      </div>
+    ),
+  },
 ];
 
 function ClosureAnimation() {
