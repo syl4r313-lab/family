@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactionNetwork, Reaction, ResourceId, COTResult } from './engine';
-import { closureOf } from './engine';
+import { computeOrganization } from './engine';
 import { presets } from './presets';
 
 interface Props {
@@ -367,82 +367,34 @@ function NetworkGraph({ network, startSet, result }: { network: ReactionNetwork;
 }
 
 // ---------------------------------------------------------------------------
-// Live closure preview
+// Live organization preview (both checks on the current start set)
 // ---------------------------------------------------------------------------
 
-function ClosurePreview({ network, startSet }: { network: ReactionNetwork; startSet: ResourceId[] }) {
+function LiveCheck({ network, startSet }: { network: ReactionNetwork; startSet: ResourceId[] }) {
   if (startSet.length === 0) return null;
-
-  const { closedSet } = closureOf(network, startSet);
-  const added = closedSet.filter(r => !startSet.includes(r));
-  const sourceReactions = network.reactions.filter(r => r.inputs.length === 0);
-
-  // Which reactions caused each added resource?
-  const addedBy: Record<string, string[]> = {};
-  for (const r of added) {
-    const causedBy = network.reactions
-      .filter(rx => rx.outputs.includes(r) && rx.inputs.every(inp => closedSet.includes(inp)))
-      .map(rx => rx.id);
-    addedBy[r] = causedBy;
-  }
+  const preview = computeOrganization(network, startSet);
 
   return (
-    <div className="bg-[#0a0a0a] rounded border border-[#ffff00]/30 p-4 space-y-3">
-      <div className="text-[#ffff00] text-xs uppercase tracking-wider font-bold">
-        CLOSURE-VORSCHAU — was die Analyse tatsächlich prüft
-      </div>
-
-      <div className="text-[#c0c0c0] text-xs leading-relaxed">
-        Die Analyse startet mit deiner Startmenge und <span className="text-[#ffff00]">erweitert sie automatisch</span>,
-        indem alle anwendbaren Reaktionen feuern (Closure-Schritt). Erst danach wird Selbsterhaltung geprüft.
-      </div>
-
-      <div className="space-y-1">
-        <div className="text-[#00ff41] text-xs font-bold">Deine Startmenge:</div>
-        <div className="flex flex-wrap gap-1.5">
-          {startSet.map(r => (
-            <span key={r} className="border border-[#00ff41] text-[#00ff41] bg-black text-xs px-2 py-0.5 rounded font-mono">{r}</span>
-          ))}
+    <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/20 p-3 space-y-2">
+      <div className="text-[#00ff41] text-xs font-bold uppercase tracking-wider">LIVE-CHECK</div>
+      <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+        <div className={`rounded p-2 border ${preview.isClosed ? 'border-[#00ff41]/40 text-[#00ff41]' : 'border-[#ff0080]/60 text-[#ff0080]'}`}>
+          {preview.isClosed ? '✓' : '✗'} Abgeschlossen
+          {!preview.isClosed && (
+            <div className="text-[#c0c0c0] mt-1 text-[10px]">
+              {preview.closureViolations.map(v =>
+                `${v.reactionId} → ${v.outsideResources.join(', ')} ∉ Set`
+              ).join(' | ')}
+            </div>
+          )}
         </div>
-      </div>
-
-      {added.length > 0 ? (
-        <div className="space-y-1">
-          <div className="text-[#ffff00] text-xs font-bold">Durch Closure hinzugefügt ({added.length}):</div>
-          <div className="flex flex-wrap gap-1.5">
-            {added.map(r => (
-              <span key={r} title={`hinzugefügt durch: ${addedBy[r]?.join(', ') ?? '?'}`}
-                className="border border-[#ffff00] text-[#ffff00] bg-black text-xs px-2 py-0.5 rounded font-mono cursor-help">
-                +{r}
-                {addedBy[r]?.length ? <span className="text-[#ffff00]/50 ml-1">({addedBy[r].join(',')})</span> : null}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="text-[#00ff41]/60 text-xs">Keine weiteren Ressourcen durch Closure hinzugefügt.</div>
-      )}
-
-      {sourceReactions.length > 0 && (
-        <div className="border border-[#ff0080]/40 rounded p-2 text-xs">
-          <span className="text-[#ff0080] font-bold">⚠ Quell-Reaktionen (immer aktiv): </span>
-          <span className="text-[#c0c0c0]">
-            {sourceReactions.map(r => `${r.id} (∅ → ${r.outputs.join(', ')})`).join(', ')}.
-            Sie feuern immer, egal was in der Startmenge ist.
-          </span>
-        </div>
-      )}
-
-      <div className="border-t border-[#00ff41]/20 pt-2">
-        <div className="text-[#00ff41] text-xs font-bold mb-1">Vollständige Analysemenge ({closedSet.length}):</div>
-        <div className="flex flex-wrap gap-1.5">
-          {closedSet.map(r => (
-            <span key={r} className={`text-xs px-2 py-0.5 rounded font-mono border ${
-              startSet.includes(r)
-                ? 'border-[#00ff41] text-[#00ff41] bg-black'
-                : 'border-[#ffff00] text-[#ffff00] bg-black'
-            }`}>{r}</span>
-          ))}
+        <div className={`rounded p-2 border ${preview.isSelfMaintaining ? 'border-[#00ff41]/40 text-[#00ff41]' : 'border-[#ff0080]/60 text-[#ff0080]'}`}>
+          {preview.isSelfMaintaining ? '✓' : '✗'} Selbsterhaltend
+          {!preview.isSelfMaintaining && (
+            <div className="text-[#c0c0c0] mt-1 text-[10px]">
+              Nicht produziert: {preview.selfMaintViolations.join(', ')}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -693,8 +645,8 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
         )}
       </div>
 
-      {/* Live closure preview */}
-      <ClosurePreview network={network} startSet={startSet} />
+      {/* Live check preview */}
+      <LiveCheck network={network} startSet={startSet} />
 
       {/* Network visualization */}
       <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
