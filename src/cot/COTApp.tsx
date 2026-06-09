@@ -98,8 +98,6 @@ export default function COTApp() {
           <div className="space-y-4">
             <TraceViewer
               trace={result.trace}
-              closedSet={result.closedSet}
-              finalSet={result.organization ?? []}
             />
             <div className="flex gap-3">
               <button
