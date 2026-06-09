@@ -175,8 +175,12 @@ export default function OnboardingScreen({ onComplete }: Props) {
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-3xl font-bold text-[#00ff41] mb-1">COT Explorer</div>
-          <div className="text-[#c0c0c0] text-sm">Chemical Organization Theory</div>
+          <div className="text-5xl font-bold text-[#00ff41] mb-2 tracking-widest font-mono"
+            style={{ textShadow: '0 0 20px #00ff41, 0 0 40px #00ff4180' }}>
+            C.O.T
+          </div>
+          <div className="text-[#c0c0c0] text-base mb-1">Chemical Organization Theory</div>
+          <div className="text-[#ff0080] text-sm font-mono tracking-wider">Creativity · SS 2026</div>
         </div>
 
         {/* Slide card */}
