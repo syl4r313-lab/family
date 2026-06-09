@@ -1,4 +1,4 @@
-// COT Engine — Chemical Organization Theory computation with full tracing
+// COT Engine — Chemical Organization Theory
 // Pure TypeScript, no external dependencies.
 
 export type ResourceId = string;
@@ -17,205 +17,171 @@ export interface ReactionNetwork {
 }
 
 export type TraceStep =
-  | { type: 'closure_start'; currentSet: ResourceId[] }
-  | { type: 'reaction_fires'; reactionId: ReactionId; inputs: ResourceId[]; newResources: ResourceId[]; reason: string }
-  | { type: 'reaction_skipped'; reactionId: ReactionId; missingInputs: ResourceId[]; reason: string }
-  | { type: 'closure_reached'; finalSet: ResourceId[] }
-  | { type: 'selfmaint_start'; currentSet: ResourceId[] }
-  | { type: 'resource_not_produced'; resource: ResourceId; consumedBy: ReactionId[]; reason: string }
-  | { type: 'resource_removed'; resource: ResourceId; reason: string }
-  | { type: 'reaction_disabled'; reactionId: ReactionId; reason: string }
-  | { type: 'selfmaint_reached'; finalSet: ResourceId[] }
-  | { type: 'organization_check'; closedCheck: boolean; selfMaintCheck: boolean }
+  | { type: 'closure_start'; set: ResourceId[] }
+  | { type: 'reaction_fires_inside'; reactionId: ReactionId; label?: string }
+  | { type: 'reaction_fires_outside'; reactionId: ReactionId; outsideResources: ResourceId[]; label?: string }
+  | { type: 'reaction_not_applicable'; reactionId: ReactionId; missingInputs: ResourceId[] }
+  | { type: 'closure_ok' }
+  | { type: 'closure_fail'; violations: { reactionId: ReactionId; outsideResources: ResourceId[] }[] }
+  | { type: 'selfmaint_start'; set: ResourceId[] }
+  | { type: 'resource_produced_and_consumed'; resource: ResourceId; producedBy: ReactionId[]; consumedBy: ReactionId[] }
+  | { type: 'resource_only_produced'; resource: ResourceId; producedBy: ReactionId[] }
+  | { type: 'resource_not_consumed'; resource: ResourceId }
+  | { type: 'resource_not_produced'; resource: ResourceId; consumedBy: ReactionId[] }
+  | { type: 'selfmaint_ok' }
+  | { type: 'selfmaint_fail'; violations: ResourceId[] }
   | { type: 'organization_found'; resources: ResourceId[] }
-  | { type: 'not_organization'; reason: string };
+  | { type: 'not_organization'; closedCheck: boolean; selfMaintCheck: boolean };
 
 export interface COTResult {
   startSet: ResourceId[];
+  isOrganization: boolean;
+  isClosed: boolean;
+  isSelfMaintaining: boolean;
+  closureViolations: { reactionId: ReactionId; outsideResources: ResourceId[] }[];
+  selfMaintViolations: ResourceId[];
+  trace: TraceStep[];
+  // legacy fields kept for graph colouring — both equal startSet now
   closedSet: ResourceId[];
   organization: ResourceId[] | null;
-  isOrganization: boolean;
-  /** True when the closed set itself (without any resource removal) is already the organization */
   isExactOrganization: boolean;
-  trace: TraceStep[];
-}
-
-/** Compute the closure of a set: repeatedly fire reactions whose inputs are all present. */
-export function closureOf(
-  network: ReactionNetwork,
-  startSet: ResourceId[]
-): { closedSet: ResourceId[]; trace: TraceStep[] } {
-  const trace: TraceStep[] = [];
-  const current = new Set<ResourceId>(startSet);
-
-  trace.push({ type: 'closure_start', currentSet: [...current] });
-
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const reaction of network.reactions) {
-      const allInputsPresent = reaction.inputs.every(r => current.has(r));
-      if (allInputsPresent) {
-        const newResources = reaction.outputs.filter(r => !current.has(r));
-        if (newResources.length > 0) {
-          const inputDesc =
-            reaction.inputs.length === 0
-              ? '∅ (keine Inputs nötig)'
-              : `[${reaction.inputs.join(', ')}]`;
-          trace.push({
-            type: 'reaction_fires',
-            reactionId: reaction.id,
-            inputs: reaction.inputs,
-            newResources,
-            reason: `Reaktion ${reaction.id}${reaction.label ? ` (${reaction.label})` : ''}: Inputs ${inputDesc} sind alle vorhanden → füge neue Ressourcen [${newResources.join(', ')}] hinzu`,
-          });
-          newResources.forEach(r => current.add(r));
-          changed = true;
-        }
-      }
-    }
-  }
-
-  trace.push({ type: 'closure_reached', finalSet: [...current] });
-  return { closedSet: [...current], trace };
 }
 
 /**
- * Check self-maintenance: every resource that is consumed by any reaction in the
- * active set must also be produced by some reaction in the active set.
- * "Active" reactions are those whose inputs AND outputs are all within resourceSet.
- * Returns the set of resources that are consumed but NOT produced (violations).
+ * Check closure: for every reaction whose inputs are all in `set`,
+ * all its outputs must also be in `set`.
  */
-export function checkSelfMaintenance(
+function checkClosure(
   network: ReactionNetwork,
-  resourceSet: ResourceId[]
-): { violations: ResourceId[]; producedBy: Map<ResourceId, ReactionId[]>; consumedBy: Map<ResourceId, ReactionId[]> } {
-  const set = new Set(resourceSet);
-  // Only consider reactions whose inputs AND outputs are all within resourceSet
-  const activeReactions = network.reactions.filter(
-    r => r.inputs.every(x => set.has(x)) && r.outputs.every(x => set.has(x))
-  );
+  set: Set<ResourceId>
+): {
+  isClosed: boolean;
+  violations: { reactionId: ReactionId; outsideResources: ResourceId[] }[];
+  trace: TraceStep[];
+} {
+  const trace: TraceStep[] = [];
+  trace.push({ type: 'closure_start', set: [...set] });
+
+  const violations: { reactionId: ReactionId; outsideResources: ResourceId[] }[] = [];
+
+  for (const r of network.reactions) {
+    const missingInputs = r.inputs.filter(x => !set.has(x));
+    if (missingInputs.length > 0) {
+      trace.push({ type: 'reaction_not_applicable', reactionId: r.id, missingInputs });
+      continue;
+    }
+    const outsideResources = r.outputs.filter(x => !set.has(x));
+    if (outsideResources.length > 0) {
+      trace.push({ type: 'reaction_fires_outside', reactionId: r.id, outsideResources, label: r.label });
+      violations.push({ reactionId: r.id, outsideResources });
+    } else {
+      trace.push({ type: 'reaction_fires_inside', reactionId: r.id, label: r.label });
+    }
+  }
+
+  if (violations.length === 0) {
+    trace.push({ type: 'closure_ok' });
+  } else {
+    trace.push({ type: 'closure_fail', violations });
+  }
+
+  return { isClosed: violations.length === 0, violations, trace };
+}
+
+/**
+ * Check self-maintenance: for every resource consumed by an applicable reaction
+ * (inputs ⊆ set), that resource must also be produced by some applicable reaction.
+ */
+function checkSelfMaintenance(
+  network: ReactionNetwork,
+  set: Set<ResourceId>
+): {
+  isSelfMaintaining: boolean;
+  violations: ResourceId[];
+  trace: TraceStep[];
+} {
+  const trace: TraceStep[] = [];
+  trace.push({ type: 'selfmaint_start', set: [...set] });
 
   const produced = new Map<ResourceId, ReactionId[]>();
   const consumed = new Map<ResourceId, ReactionId[]>();
 
-  for (const r of activeReactions) {
-    for (const res of r.outputs) {
-      if (set.has(res)) {
-        if (!produced.has(res)) produced.set(res, []);
-        produced.get(res)!.push(r.id);
+  for (const r of network.reactions) {
+    const applicable = r.inputs.every(x => set.has(x));
+    if (!applicable) continue;
+    for (const x of r.outputs) {
+      if (set.has(x)) {
+        if (!produced.has(x)) produced.set(x, []);
+        produced.get(x)!.push(r.id);
       }
     }
-    for (const res of r.inputs) {
-      if (set.has(res)) {
-        if (!consumed.has(res)) consumed.set(res, []);
-        consumed.get(res)!.push(r.id);
-      }
+    for (const x of r.inputs) {
+      if (!consumed.has(x)) consumed.set(x, []);
+      consumed.get(x)!.push(r.id);
     }
   }
 
   const violations: ResourceId[] = [];
-  for (const res of resourceSet) {
-    if (consumed.has(res) && !produced.has(res)) {
+  for (const res of set) {
+    const isConsumed = consumed.has(res);
+    const isProduced = produced.has(res);
+    if (isConsumed && isProduced) {
+      trace.push({ type: 'resource_produced_and_consumed', resource: res, producedBy: produced.get(res)!, consumedBy: consumed.get(res)! });
+    } else if (isConsumed && !isProduced) {
+      trace.push({ type: 'resource_not_produced', resource: res, consumedBy: consumed.get(res)! });
       violations.push(res);
+    } else if (!isConsumed && isProduced) {
+      trace.push({ type: 'resource_only_produced', resource: res, producedBy: produced.get(res)! });
+    } else {
+      trace.push({ type: 'resource_not_consumed', resource: res });
     }
   }
 
-  return { violations, producedBy: produced, consumedBy: consumed };
+  if (violations.length === 0) {
+    trace.push({ type: 'selfmaint_ok' });
+  } else {
+    trace.push({ type: 'selfmaint_fail', violations });
+  }
+
+  return { isSelfMaintaining: violations.length === 0, violations, trace };
 }
 
 /**
- * Compute the organization: closure → self-maintenance cascade until stable → check.
+ * Check if a given set is a Chemical Organization:
+ * it must be both closed and self-maintaining.
  */
 export function computeOrganization(
   network: ReactionNetwork,
   startSet: ResourceId[]
 ): COTResult {
   const trace: TraceStep[] = [];
+  const set = new Set(startSet);
 
-  // Step 1: Compute closure
-  const { closedSet, trace: closureTrace } = closureOf(network, startSet);
-  trace.push(...closureTrace);
+  const closureResult = checkClosure(network, set);
+  trace.push(...closureResult.trace);
 
-  // Step 2: Iteratively remove resources that are consumed but not produced
-  let current = [...closedSet];
-  trace.push({ type: 'selfmaint_start', currentSet: [...current] });
+  const smResult = checkSelfMaintenance(network, set);
+  trace.push(...smResult.trace);
 
-  let changed = true;
-  while (changed) {
-    changed = false;
-    const { violations, consumedBy } = checkSelfMaintenance(network, current);
-    if (violations.length > 0) {
-      for (const res of violations) {
-        const consumers = consumedBy.get(res) ?? [];
-        trace.push({
-          type: 'resource_not_produced',
-          resource: res,
-          consumedBy: consumers,
-          reason: `Ressource "${res}" wird von Reaktion(en) [${consumers.join(', ')}] verbraucht, aber von keiner Reaktion in der aktuellen Menge produziert`,
-        });
-        trace.push({
-          type: 'resource_removed',
-          resource: res,
-          reason: `Entferne "${res}" aus der Menge, da Selbsterhaltung verletzt`,
-        });
+  const isOrganization = closureResult.isClosed && smResult.isSelfMaintaining && startSet.length > 0;
 
-        // Check which reactions get disabled by this removal
-        const currentSet = new Set(current);
-        for (const reaction of network.reactions) {
-          if (reaction.inputs.includes(res) && reaction.inputs.every(r => currentSet.has(r))) {
-            trace.push({
-              type: 'reaction_disabled',
-              reactionId: reaction.id,
-              reason: `Reaktion ${reaction.id} wird deaktiviert, da Input "${res}" entfernt wurde`,
-            });
-          }
-        }
-
-        current = current.filter(r => r !== res);
-        changed = true;
-      }
-    }
-  }
-
-  trace.push({ type: 'selfmaint_reached', finalSet: [...current] });
-
-  // Step 3: Verify closure AND self-maintenance of the result
-  const { closedSet: recheck } = closureOf(network, current);
-  const isClosed = recheck.length === current.length && recheck.every(r => current.includes(r));
-  const { violations: finalViolations } = checkSelfMaintenance(network, current);
-  const isSelfMaintaining = finalViolations.length === 0;
-
-  trace.push({
-    type: 'organization_check',
-    closedCheck: isClosed,
-    selfMaintCheck: isSelfMaintaining,
-  });
-
-  const isOrganization = isClosed && isSelfMaintaining && current.length > 0;
-
-  if (isOrganization) {
-    trace.push({ type: 'organization_found', resources: [...current] });
-  } else {
-    const reasons: string[] = [];
-    if (!isClosed) reasons.push('die Menge ist nicht abgeschlossen (Closure-Bedingung verletzt)');
-    if (!isSelfMaintaining) reasons.push('die Menge ist nicht selbsterhaltend');
-    if (current.length === 0) reasons.push('die resultierende Menge ist leer');
-    trace.push({ type: 'not_organization', reason: reasons.join('; ') });
-  }
-
-  // Was the closed set already the organization (no resources removed)?
-  const isExactOrganization =
-    isOrganization &&
-    current.length === closedSet.length &&
-    current.every(r => closedSet.includes(r));
+  trace.push(
+    isOrganization
+      ? { type: 'organization_found', resources: startSet }
+      : { type: 'not_organization', closedCheck: closureResult.isClosed, selfMaintCheck: smResult.isSelfMaintaining }
+  );
 
   return {
-    startSet: [...startSet],
-    closedSet,
-    organization: isOrganization ? current : null,
+    startSet,
     isOrganization,
-    isExactOrganization,
+    isClosed: closureResult.isClosed,
+    isSelfMaintaining: smResult.isSelfMaintaining,
+    closureViolations: closureResult.violations,
+    selfMaintViolations: smResult.violations,
     trace,
+    // legacy compat
+    closedSet: startSet,
+    organization: isOrganization ? startSet : null,
+    isExactOrganization: isOrganization,
   };
 }
