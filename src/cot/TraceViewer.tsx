@@ -11,26 +11,26 @@ function stepColor(step: TraceStep): string {
     case 'reaction_fires_inside':
     case 'reaction_not_applicable':
     case 'closure_ok':
-      return 'border-[#00ff41]/40 bg-[#0a0a0a]';
+      return 'border-[#15803D] bg-white';
     case 'reaction_fires_outside':
     case 'closure_fail':
-      return 'border-[#ff0080]/60 bg-[#0a0a0a]';
+      return 'border-[#BE123C] bg-white';
     case 'selfmaint_start':
     case 'resource_produced_and_consumed':
     case 'resource_only_produced':
     case 'resource_not_consumed':
-      return 'border-[#ffff00]/30 bg-[#0a0a0a]';
+      return 'border-[#B45309] bg-white';
     case 'resource_not_produced':
     case 'selfmaint_fail':
-      return 'border-[#ff0080]/60 bg-[#0a0a0a]';
+      return 'border-[#BE123C] bg-white';
     case 'selfmaint_ok':
-      return 'border-[#00ff41]/40 bg-[#0a0a0a]';
+      return 'border-[#15803D] bg-white';
     case 'organization_found':
-      return 'border-[#00ff41] bg-[#0a0a0a]';
+      return 'border-[#15803D] bg-white';
     case 'not_organization':
-      return 'border-[#ff0080] bg-[#0a0a0a]';
+      return 'border-[#BE123C] bg-white';
     default:
-      return 'border-[#00ff41]/20 bg-[#0a0a0a]';
+      return 'border-[#D4C4B0] bg-white';
   }
 }
 
@@ -81,12 +81,12 @@ function stepTitle(step: TraceStep): string {
 
 function Tag({ text, color }: { text: string; color: 'green' | 'red' | 'yellow' | 'grey' }) {
   const cls = {
-    green: 'border-[#00ff41] text-[#00ff41]',
-    red: 'border-[#ff0080] text-[#ff0080]',
-    yellow: 'border-[#ffff00] text-[#ffff00]',
-    grey: 'border-[#00ff41]/30 text-[#c0c0c0]',
+    green: 'border-[#15803D] text-[#15803D]',
+    red: 'border-[#BE123C] text-[#BE123C]',
+    yellow: 'border-[#B45309] text-[#B45309]',
+    grey: 'border-[#D4C4B0] text-[#2A1810]',
   }[color];
-  return <span className={`text-xs px-2 py-0.5 rounded border font-mono bg-black ${cls}`}>{text}</span>;
+  return <span className={`text-xs px-2 py-0.5 rounded border font-mono bg-white ${cls}`}>{text}</span>;
 }
 
 function StepBody({ step }: { step: TraceStep }) {
@@ -94,10 +94,10 @@ function StepBody({ step }: { step: TraceStep }) {
     case 'closure_start':
       return (
         <div>
-          <p className="text-[#c0c0c0] text-xs mb-2">Geprüfte Menge:</p>
+          <p className="text-[#2A1810] text-xs mb-2">Geprüfte Menge:</p>
           <div className="flex flex-wrap gap-1">
             {step.set.length === 0
-              ? <span className="text-[#c0c0c0]/50 text-xs">∅</span>
+              ? <span className="text-[#2A1810]/50 text-xs">∅</span>
               : step.set.map(r => <Tag key={r} text={r} color="grey" />)}
           </div>
         </div>
@@ -105,17 +105,17 @@ function StepBody({ step }: { step: TraceStep }) {
     case 'reaction_fires_outside':
       return (
         <div className="space-y-1">
-          <p className="text-[#c0c0c0] text-xs">Diese Reaktion feuert (alle Inputs vorhanden), produziert aber Ressourcen, die <strong className="text-[#ff0080]">nicht</strong> in der Menge sind:</p>
+          <p className="text-[#2A1810] text-xs">Diese Reaktion feuert (alle Inputs vorhanden), produziert aber Ressourcen, die <strong className="text-[#BE123C]">nicht</strong> in der Menge sind:</p>
           <div className="flex flex-wrap gap-1">
             {step.outsideResources.map(r => <Tag key={r} text={`+${r} ∉ Set`} color="red" />)}
           </div>
-          <p className="text-[#ff0080]/70 text-xs">→ Die Menge ist damit nicht abgeschlossen.</p>
+          <p className="text-[#BE123C]/70 text-xs">→ Die Menge ist damit nicht abgeschlossen.</p>
         </div>
       );
     case 'reaction_not_applicable':
       return (
         <div>
-          <p className="text-[#c0c0c0] text-xs mb-1">Fehlende Inputs:</p>
+          <p className="text-[#2A1810] text-xs mb-1">Fehlende Inputs:</p>
           <div className="flex flex-wrap gap-1">
             {step.missingInputs.map(r => <Tag key={r} text={`${r} fehlt`} color="grey" />)}
           </div>
@@ -124,10 +124,10 @@ function StepBody({ step }: { step: TraceStep }) {
     case 'closure_fail':
       return (
         <div className="space-y-1">
-          <p className="text-[#ff0080] text-xs font-bold">Verstöße:</p>
+          <p className="text-[#BE123C] text-xs font-bold">Verstöße:</p>
           {step.violations.map(v => (
-            <div key={v.reactionId} className="text-xs text-[#c0c0c0]">
-              <span className="text-[#ff0080]">{v.reactionId}</span> produziert außerhalb: {v.outsideResources.join(', ')}
+            <div key={v.reactionId} className="text-xs text-[#2A1810]">
+              <span className="text-[#BE123C]">{v.reactionId}</span> produziert außerhalb: {v.outsideResources.join(', ')}
             </div>
           ))}
         </div>
@@ -135,7 +135,7 @@ function StepBody({ step }: { step: TraceStep }) {
     case 'selfmaint_start':
       return (
         <div>
-          <p className="text-[#c0c0c0] text-xs mb-2">Prüfe für jede Ressource: wird sie verbraucht? Falls ja — wird sie auch produziert?</p>
+          <p className="text-[#2A1810] text-xs mb-2">Prüfe für jede Ressource: wird sie verbraucht? Falls ja — wird sie auch produziert?</p>
           <div className="flex flex-wrap gap-1">
             {step.set.map(r => <Tag key={r} text={r} color="grey" />)}
           </div>
@@ -143,24 +143,24 @@ function StepBody({ step }: { step: TraceStep }) {
       );
     case 'resource_produced_and_consumed':
       return (
-        <div className="text-xs text-[#c0c0c0] space-y-0.5">
-          <div>Verbraucht von: {step.consumedBy.map(id => <span key={id} className="text-[#ff0080] mr-1">{id}</span>)}</div>
-          <div>Produziert von: {step.producedBy.map(id => <span key={id} className="text-[#00ff41] mr-1">{id}</span>)} ✓</div>
+        <div className="text-xs text-[#2A1810] space-y-0.5">
+          <div>Verbraucht von: {step.consumedBy.map(id => <span key={id} className="text-[#BE123C] mr-1">{id}</span>)}</div>
+          <div>Produziert von: {step.producedBy.map(id => <span key={id} className="text-[#15803D] mr-1">{id}</span>)} ✓</div>
         </div>
       );
     case 'resource_not_produced':
       return (
         <div className="text-xs space-y-0.5">
-          <div className="text-[#c0c0c0]">Verbraucht von: {step.consumedBy.map(id => <span key={id} className="text-[#ff0080] mr-1">{id}</span>)}</div>
-          <div className="text-[#ff0080] font-bold">Kein anwendbares Reaktion produziert "{step.resource}" → Selbsterhaltung verletzt!</div>
+          <div className="text-[#2A1810]">Verbraucht von: {step.consumedBy.map(id => <span key={id} className="text-[#BE123C] mr-1">{id}</span>)}</div>
+          <div className="text-[#BE123C] font-bold">Kein anwendbares Reaktion produziert "{step.resource}" → Selbsterhaltung verletzt!</div>
         </div>
       );
     case 'resource_only_produced':
-      return <p className="text-xs text-[#c0c0c0]">Produziert von: {step.producedBy.join(', ')} — kein Verbrauch nötig.</p>;
+      return <p className="text-xs text-[#2A1810]">Produziert von: {step.producedBy.join(', ')} — kein Verbrauch nötig.</p>;
     case 'selfmaint_fail':
       return (
         <div>
-          <p className="text-[#ff0080] text-xs font-bold mb-1">Verletzte Ressourcen:</p>
+          <p className="text-[#BE123C] text-xs font-bold mb-1">Verletzte Ressourcen:</p>
           <div className="flex flex-wrap gap-1">
             {step.violations.map(r => <Tag key={r} text={r} color="red" />)}
           </div>
@@ -175,10 +175,10 @@ function StepBody({ step }: { step: TraceStep }) {
     case 'not_organization':
       return (
         <div className="text-xs space-y-0.5">
-          <div className={step.closedCheck ? 'text-[#00ff41]' : 'text-[#ff0080]'}>
+          <div className={step.closedCheck ? 'text-[#15803D]' : 'text-[#BE123C]'}>
             {step.closedCheck ? '✓' : '✗'} Abgeschlossenheit
           </div>
-          <div className={step.selfMaintCheck ? 'text-[#00ff41]' : 'text-[#ff0080]'}>
+          <div className={step.selfMaintCheck ? 'text-[#15803D]' : 'text-[#BE123C]'}>
             {step.selfMaintCheck ? '✓' : '✗'} Selbsterhaltung
           </div>
         </div>
@@ -199,14 +199,14 @@ function StepCard({ step, index }: { step: TraceStep; index: number }) {
   return (
     <div className={`rounded border p-3 transition-all ${stepColor(step)}`}>
       <button className="w-full text-left flex items-center gap-3" onClick={() => setExpanded(e => !e)}>
-        <span className={`text-sm font-bold shrink-0 w-4 text-center ${isGreen ? 'text-[#00ff41]' : isRed ? 'text-[#ff0080]' : 'text-[#ffff00]'}`}>
+        <span className={`text-sm font-bold shrink-0 w-4 text-center ${isGreen ? 'text-[#15803D]' : isRed ? 'text-[#BE123C]' : 'text-[#B45309]'}`}>
           {icon}
         </span>
-        <span className="flex-1 text-xs font-mono text-[#c0c0c0]">{stepTitle(step)}</span>
-        <span className="text-[#00ff41]/30 text-xs shrink-0">#{index + 1} {expanded ? '▲' : '▼'}</span>
+        <span className="flex-1 text-xs font-mono text-[#2A1810]">{stepTitle(step)}</span>
+        <span className="text-[#15803D]/30 text-xs shrink-0">#{index + 1} {expanded ? '▲' : '▼'}</span>
       </button>
       {expanded && (
-        <div className="mt-2 pl-7 border-t border-[#00ff41]/10 pt-2">
+        <div className="mt-2 pl-7 border-t border-[#15803D]/10 pt-2">
           <StepBody step={step} />
         </div>
       )}
@@ -222,11 +222,11 @@ export default function TraceViewer({ trace }: Props) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[#00ff41] text-xs font-bold uppercase tracking-wider">PRÜFPROTOKOLL</div>
-        <div className="flex gap-1 bg-[#0a0a0a] border border-[#00ff41]/30 rounded p-0.5">
+        <div className="text-[#9A3412] text-xs font-bold uppercase tracking-wider">PRÜFPROTOKOLL</div>
+        <div className="flex gap-1 bg-[#FFFDF8] border border-[#D4C4B0] rounded p-0.5">
           {(['all', 'step'] as const).map(m => (
             <button key={m} onClick={() => { setMode(m); setCurrentStep(0); }}
-              className={`px-2 py-0.5 text-xs rounded transition-colors ${mode === m ? 'bg-[#00ff41] text-black font-bold' : 'text-[#c0c0c0] hover:text-[#00ff41]'}`}>
+              className={`px-2 py-0.5 text-xs rounded transition-colors ${mode === m ? 'bg-[#9A3412] text-white font-bold' : 'text-[#2A1810] hover:text-[#9A3412]'}`}>
               {m === 'all' ? 'Alle' : 'Schritt'}
             </button>
           ))}
@@ -234,12 +234,12 @@ export default function TraceViewer({ trace }: Props) {
       </div>
 
       {mode === 'step' && (
-        <div className="flex items-center gap-2 mb-3 bg-[#0a0a0a] border border-[#00ff41]/30 rounded p-2">
+        <div className="flex items-center gap-2 mb-3 bg-[#FFFDF8] border border-[#D4C4B0] rounded p-2">
           <button onClick={() => setCurrentStep(s => Math.max(0, s - 1))} disabled={currentStep === 0}
-            className="px-2 py-0.5 text-[#00ff41] text-xs disabled:opacity-30 hover:bg-[#00ff4110] rounded">← Zurück</button>
-          <span className="text-[#c0c0c0] text-xs flex-1 text-center">{currentStep + 1} / {trace.length}</span>
+            className="px-2 py-0.5 text-[#9A3412] text-xs disabled:opacity-30 hover:bg-[#9A3412]/10 rounded">← Zurück</button>
+          <span className="text-[#2A1810] text-xs flex-1 text-center">{currentStep + 1} / {trace.length}</span>
           <button onClick={() => setCurrentStep(s => Math.min(trace.length - 1, s + 1))} disabled={currentStep === trace.length - 1}
-            className="px-2 py-0.5 text-[#00ff41] text-xs disabled:opacity-30 hover:bg-[#00ff4110] rounded">Weiter →</button>
+            className="px-2 py-0.5 text-[#9A3412] text-xs disabled:opacity-30 hover:bg-[#9A3412]/10 rounded">Weiter →</button>
         </div>
       )}
 
