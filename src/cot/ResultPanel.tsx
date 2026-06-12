@@ -5,8 +5,8 @@ interface Props {
 }
 
 function Tag({ text, color }: { text: string; color: 'green' | 'red' | 'yellow' | 'grey' }) {
-  const cls = { green: 'border-[#00ff41] text-[#00ff41]', red: 'border-[#ff0080] text-[#ff0080]', yellow: 'border-[#ffff00] text-[#ffff00]', grey: 'border-[#00ff41]/30 text-[#c0c0c0]' }[color];
-  return <span className={`text-xs px-2 py-0.5 rounded border font-mono bg-black ${cls}`}>{text}</span>;
+  const cls = { green: 'border-[#15803D] text-[#15803D]', red: 'border-[#BE123C] text-[#BE123C]', yellow: 'border-[#B45309] text-[#B45309]', grey: 'border-[#15803D]/30 text-[#2A1810]' }[color];
+  return <span className={`text-xs px-2 py-0.5 rounded border font-mono bg-white ${cls}`}>{text}</span>;
 }
 
 export default function ResultPanel({ result }: Props) {
@@ -15,15 +15,14 @@ export default function ResultPanel({ result }: Props) {
   return (
     <div className="space-y-4">
       {/* Verdict */}
-      <div className={`rounded-2xl border-2 p-6 text-center ${isOrganization ? 'border-[#00ff41] bg-[#0a0a0a]' : 'border-[#ff0080] bg-[#0a0a0a]'}`}>
-        <div className={`text-5xl font-bold mb-2 font-mono ${isOrganization ? 'text-[#00ff41]' : 'text-[#ff0080]'}`}
-          style={isOrganization ? { textShadow: '0 0 20px #00ff41' } : undefined}>
+      <div className={`rounded-2xl border-2 p-6 text-center ${isOrganization ? 'border-[#15803D] bg-[#FFFDF8]' : 'border-[#BE123C] bg-[#FFFDF8]'}`}>
+        <div className={`text-5xl font-black mb-2 ${isOrganization ? 'text-[#15803D]' : 'text-[#BE123C]'}`}>
           {isOrganization ? '✓' : '✗'}
         </div>
-        <div className={`text-xl font-bold mb-1 ${isOrganization ? 'text-[#00ff41]' : 'text-[#ff0080]'}`}>
+        <div className={`text-xl font-bold mb-1 ${isOrganization ? 'text-[#15803D]' : 'text-[#BE123C]'}`}>
           {isOrganization ? 'Diese Menge ist eine Organisation' : 'Diese Menge ist keine Organisation'}
         </div>
-        <div className="text-[#c0c0c0] text-sm">
+        <div className="text-[#2A1810] text-sm">
           Geprüfte Menge: {startSet.length === 0 ? '∅ (leer)' : startSet.join(', ')}
         </div>
       </div>
@@ -31,23 +30,23 @@ export default function ResultPanel({ result }: Props) {
       {/* Two checks */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Closure check */}
-        <div className={`rounded-xl border p-4 ${isClosed ? 'border-[#00ff41]/40 bg-[#0a0a0a]' : 'border-[#ff0080]/60 bg-[#0a0a0a]'}`}>
+        <div className={`rounded-xl border p-4 ${isClosed ? 'border-[#15803D]/40 bg-[#FFFDF8]' : 'border-[#BE123C]/60 bg-[#FFFDF8]'}`}>
           <div className="flex items-center gap-2 mb-2">
-            <span className={`text-lg font-bold ${isClosed ? 'text-[#00ff41]' : 'text-[#ff0080]'}`}>{isClosed ? '✓' : '✗'}</span>
-            <div className={`text-sm font-bold ${isClosed ? 'text-[#00ff41]' : 'text-[#ff0080]'}`}>Abgeschlossenheit (Closure)</div>
+            <span className={`text-lg font-bold ${isClosed ? 'text-[#15803D]' : 'text-[#BE123C]'}`}>{isClosed ? '✓' : '✗'}</span>
+            <div className={`text-sm font-bold ${isClosed ? 'text-[#15803D]' : 'text-[#BE123C]'}`}>Abgeschlossenheit (Closure)</div>
           </div>
-          <p className="text-[#c0c0c0] text-xs mb-3">
+          <p className="text-[#2A1810] text-xs mb-3">
             Jede anwendbare Reaktion darf nur Ressourcen produzieren, die bereits in der Menge sind.
           </p>
           {isClosed ? (
-            <div className="text-[#00ff41] text-xs">Alle anwendbaren Reaktionen bleiben innerhalb der Menge.</div>
+            <div className="text-[#15803D] text-xs">Alle anwendbaren Reaktionen bleiben innerhalb der Menge.</div>
           ) : (
             <div className="space-y-2">
               {closureViolations.map(v => (
-                <div key={v.reactionId} className="text-xs bg-black border border-[#ff0080]/30 rounded p-2">
-                  <span className="text-[#ff0080] font-bold">{v.reactionId}</span>
-                  <span className="text-[#c0c0c0]"> produziert außerhalb: </span>
-                  <span className="text-[#ff0080]">{v.outsideResources.join(', ')}</span>
+                <div key={v.reactionId} className="text-xs bg-white border border-[#BE123C]/30 rounded p-2">
+                  <span className="text-[#BE123C] font-bold">{v.reactionId}</span>
+                  <span className="text-[#2A1810]"> produziert außerhalb: </span>
+                  <span className="text-[#BE123C]">{v.outsideResources.join(', ')}</span>
                 </div>
               ))}
             </div>
@@ -55,19 +54,19 @@ export default function ResultPanel({ result }: Props) {
         </div>
 
         {/* Self-maintenance check */}
-        <div className={`rounded-xl border p-4 ${isSelfMaintaining ? 'border-[#00ff41]/40 bg-[#0a0a0a]' : 'border-[#ff0080]/60 bg-[#0a0a0a]'}`}>
+        <div className={`rounded-xl border p-4 ${isSelfMaintaining ? 'border-[#15803D]/40 bg-[#FFFDF8]' : 'border-[#BE123C]/60 bg-[#FFFDF8]'}`}>
           <div className="flex items-center gap-2 mb-2">
-            <span className={`text-lg font-bold ${isSelfMaintaining ? 'text-[#00ff41]' : 'text-[#ff0080]'}`}>{isSelfMaintaining ? '✓' : '✗'}</span>
-            <div className={`text-sm font-bold ${isSelfMaintaining ? 'text-[#00ff41]' : 'text-[#ff0080]'}`}>Selbsterhaltung (Self-Maintenance)</div>
+            <span className={`text-lg font-bold ${isSelfMaintaining ? 'text-[#15803D]' : 'text-[#BE123C]'}`}>{isSelfMaintaining ? '✓' : '✗'}</span>
+            <div className={`text-sm font-bold ${isSelfMaintaining ? 'text-[#15803D]' : 'text-[#BE123C]'}`}>Selbsterhaltung (Self-Maintenance)</div>
           </div>
-          <p className="text-[#c0c0c0] text-xs mb-3">
+          <p className="text-[#2A1810] text-xs mb-3">
             Jede Ressource, die von einer anwendbaren Reaktion verbraucht wird, muss auch von einer anwendbaren Reaktion produziert werden.
           </p>
           {isSelfMaintaining ? (
-            <div className="text-[#00ff41] text-xs">Alle verbrauchten Ressourcen werden auch produziert.</div>
+            <div className="text-[#15803D] text-xs">Alle verbrauchten Ressourcen werden auch produziert.</div>
           ) : (
             <div className="space-y-1">
-              <div className="text-[#ff0080] text-xs font-bold mb-1">Verbraucht aber nicht produziert:</div>
+              <div className="text-[#BE123C] text-xs font-bold mb-1">Verbraucht aber nicht produziert:</div>
               <div className="flex flex-wrap gap-1">
                 {selfMaintViolations.map(r => <Tag key={r} text={r} color="red" />)}
               </div>
@@ -77,22 +76,22 @@ export default function ResultPanel({ result }: Props) {
       </div>
 
       {/* The set being checked */}
-      <div className="bg-[#0a0a0a] rounded-xl border border-[#00ff41]/30 p-4">
-        <div className="text-[#c0c0c0] text-xs uppercase tracking-wider mb-2">Geprüfte Menge</div>
+      <div className="bg-[#FFFDF8] rounded-xl border border-[#D4C4B0] p-4">
+        <div className="text-[#9A3412] text-xs uppercase tracking-wider mb-2 font-bold">Geprüfte Menge</div>
         <div className="flex flex-wrap gap-2">
           {startSet.length === 0
-            ? <span className="text-[#c0c0c0]/40 text-sm">∅ (leer)</span>
+            ? <span className="text-[#2A1810]/40 text-sm">∅ (leer)</span>
             : startSet.map(r => <Tag key={r} text={r} color={isOrganization ? 'green' : 'grey'} />)}
         </div>
       </div>
 
       {/* Definition */}
-      <div className="bg-[#0a0a0a] border border-[#ff0080]/40 rounded-xl p-4">
-        <div className="text-[#ff0080] font-semibold text-sm mb-2">Definition: Organisation (COT)</div>
-        <div className="text-[#c0c0c0] text-sm leading-relaxed space-y-1">
+      <div className="bg-white border border-[#9A3412] rounded-xl p-4">
+        <div className="text-[#9A3412] font-bold text-sm mb-2">Definition: Organisation (COT)</div>
+        <div className="text-[#2A1810] text-sm leading-relaxed space-y-1">
           <p>Eine Menge M ist eine <strong>Organisation</strong>, wenn:</p>
-          <p className="pl-3 text-[#00ff41]">1. M ist <em>abgeschlossen</em>: alle anwendbaren Reaktionen produzieren nur Ressourcen aus M</p>
-          <p className="pl-3 text-[#ffff00]">2. M ist <em>selbsterhaltend</em>: jede verbrauchte Ressource wird in M auch produziert</p>
+          <p className="pl-3 text-[#15803D]">1. M ist <em>abgeschlossen</em>: alle anwendbaren Reaktionen produzieren nur Ressourcen aus M</p>
+          <p className="pl-3 text-[#B45309]">2. M ist <em>selbsterhaltend</em>: jede verbrauchte Ressource wird in M auch produziert</p>
         </div>
       </div>
     </div>
