@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactionNetwork, Reaction, ResourceId, COTResult } from './engine';
 import { computeOrganization } from './engine';
 import { presets } from './presets';
+import { getSavedNetworks, saveNetwork, deleteNetwork, type SavedNetwork } from './localNetworks';
 
 interface Props {
   network: ReactionNetwork;
@@ -609,6 +610,7 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
   const [reactionError, setReactionError] = useState('');
   const [showManual, setShowManual] = useState(false);
   const [showGraph, setShowGraph] = useState(true);
+  const [savedNetworks, setSavedNetworks] = useState<SavedNetwork[]>(() => getSavedNetworks());
 
   const handlePresetChange = (key: string) => {
     setActivePreset(key);
@@ -616,14 +618,42 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
     onStartSetChange(presets[key].defaultStart);
   };
 
+  const handleNewNetwork = () => {
+    setActivePreset('');
+    onNetworkChange({ resources: [], reactions: [] });
+    onStartSetChange([]);
+  };
+
+  const handleSaveNetwork = () => {
+    const name = window.prompt('Name für dieses Netzwerk:', activePreset.startsWith('saved:') ? activePreset.slice('saved:'.length) : '');
+    if (!name) return;
+    const updated = saveNetwork(name.trim(), network, startSet);
+    setSavedNetworks(updated);
+    setActivePreset(`saved:${name.trim()}`);
+  };
+
+  const handleLoadSaved = (saved: SavedNetwork) => {
+    setActivePreset(`saved:${saved.name}`);
+    onNetworkChange(saved.network);
+    onStartSetChange(saved.startSet);
+  };
+
+  const handleDeleteSaved = (name: string) => {
+    const updated = deleteNetwork(name);
+    setSavedNetworks(updated);
+    if (activePreset === `saved:${name}`) setActivePreset('');
+  };
+
   const addResource = () => {
     const r = newResource.trim();
     if (!r || network.resources.includes(r)) return;
+    setActivePreset('');
     onNetworkChange({ ...network, resources: [...network.resources, r] });
     setNewResource('');
   };
 
   const removeResource = (r: ResourceId) => {
+    setActivePreset('');
     onNetworkChange({
       resources: network.resources.filter(x => x !== r),
       reactions: network.reactions.filter(rx => !rx.inputs.includes(r) && !rx.outputs.includes(r)),
@@ -640,6 +670,7 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
       label: `${inputs.join(' + ')} → ${outputs.join(' + ')}`,
     };
     const allNew = [...inputs, ...outputs].filter(x => !network.resources.includes(x));
+    setActivePreset('');
     onNetworkChange({
       resources: [...network.resources, ...allNew],
       reactions: [...network.reactions, reaction],
@@ -653,6 +684,7 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
         ? { id, inputs: [], outputs: [resource], label: `∅ → ${resource} (Inflow)` }
         : { id, inputs: [resource], outputs: [], label: `${resource} → ∅ (Outflow)` };
     const allNew = [resource].filter(x => !network.resources.includes(x));
+    setActivePreset('');
     onNetworkChange({
       resources: [...network.resources, ...allNew],
       reactions: [...network.reactions, reaction],
@@ -670,6 +702,7 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
       return;
     }
     const allNew = [...parsed.inputs, ...parsed.outputs].filter(x => !network.resources.includes(x));
+    setActivePreset('');
     onNetworkChange({
       resources: [...network.resources, ...allNew],
       reactions: [...network.reactions, parsed],
@@ -678,6 +711,7 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
   };
 
   const removeReaction = (id: string) => {
+    setActivePreset('');
     onNetworkChange({ ...network, reactions: network.reactions.filter(r => r.id !== id) });
   };
 
@@ -712,6 +746,56 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
         {presets[activePreset]?.description && (
           <div className="text-[#2A1810]/80 text-xs border-t border-[#D4C4B0] pt-2">
             {presets[activePreset].description}
+          </div>
+        )}
+      </div>
+
+      {/* Custom / saved networks */}
+      <div className={PANEL}>
+        <div className="flex items-center justify-between mb-2">
+          <div className={`${LABEL} mb-0`}>Eigene Netzwerke</div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleNewNetwork}
+              className="px-3 py-1.5 rounded text-sm font-bold border border-[#9A3412] text-[#9A3412] bg-white hover:bg-[#9A3412]/5 transition-colors"
+            >
+              + Neues Netzwerk
+            </button>
+            <button
+              onClick={handleSaveNetwork}
+              className="px-3 py-1.5 rounded text-sm font-bold bg-[#9A3412] text-white hover:bg-[#7c2a0e] transition-colors"
+            >
+              💾 Speichern
+            </button>
+          </div>
+        </div>
+        {savedNetworks.length === 0 ? (
+          <div className="text-[#2A1810]/40 text-xs italic">
+            Noch keine eigenen Netzwerke gespeichert. Lege ein neues Netzwerk an oder bearbeite ein Beispiel und speichere es.
+          </div>
+        ) : (
+          <div className="flex gap-2 flex-wrap">
+            {savedNetworks.map(saved => (
+              <span
+                key={saved.name}
+                className={`flex items-center gap-1 rounded text-sm font-bold transition-colors ${
+                  activePreset === `saved:${saved.name}`
+                    ? 'bg-[#9A3412] text-white'
+                    : 'border border-[#9A3412] text-[#9A3412] bg-white hover:bg-[#9A3412]/5'
+                }`}
+              >
+                <button onClick={() => handleLoadSaved(saved)} className="px-3 py-1.5">
+                  {saved.name}
+                </button>
+                <button
+                  onClick={() => handleDeleteSaved(saved.name)}
+                  className={`pr-2 ${activePreset === `saved:${saved.name}` ? 'text-white hover:text-[#FFD7C2]' : 'text-[#9A3412] hover:text-[#BE123C]'}`}
+                  title="Löschen"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
           </div>
         )}
       </div>
