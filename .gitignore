@@ -1,5 +1,7 @@
 node_modules/
 dist/
+dist-cot-local/
+*.zip
 .DS_Store
 *.local
 # docs/ is committed (GitHub Pages deployment)
