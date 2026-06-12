@@ -12,6 +12,15 @@ interface Props {
   onAnalyze: () => void;
 }
 
+// Per-reaction color palette (muted/varied hues fitting the academic aesthetic)
+const REACTION_PALETTE = [
+  '#9A3412', '#0F766E', '#7C3AED', '#B45309', '#1D4ED8',
+  '#BE123C', '#15803D', '#A21CAF', '#0369A1', '#854D0E',
+];
+function reactionColor(index: number): string {
+  return REACTION_PALETTE[index % REACTION_PALETTE.length];
+}
+
 function parseReaction(raw: string, id: string): Reaction | null {
   // Accept: "a + b → c + d" or "a + b -> c + d"
   const normalized = raw.replace(/→/g, '->').replace(/=>/g, '->');
@@ -65,7 +74,7 @@ function DropZone({
 
   return (
     <div>
-      <div className="text-[#00ff41] text-xs font-bold mb-1">{label}</div>
+      <div className="text-[#9A3412] text-xs font-bold mb-1">{label}</div>
       <div
         onDragOver={e => {
           e.preventDefault();
@@ -74,24 +83,23 @@ function DropZone({
         onDragLeave={() => setOver(false)}
         onDrop={handleDrop}
         className={`min-h-[64px] rounded p-2 flex flex-wrap gap-1.5 content-start border transition-all ${
-          over ? 'border-[#00ff41] bg-[#00ff4110]' : 'border-[#00ff41]/30 bg-black'
+          over ? 'border-[#9A3412] bg-[#9A3412]/5' : 'border-[#D4C4B0] bg-[#FFFDF8]'
         }`}
-        style={over ? { boxShadow: '0 0 10px #00ff41' } : undefined}
       >
         {items.length === 0 ? (
-          <span className="text-[#00ff41]/40 text-xs italic select-none">
+          <span className="text-[#2A1810]/40 text-xs italic select-none">
             ziehe Ressourcen hierher…
           </span>
         ) : (
           items.map((r, i) => (
             <span
               key={`${r}-${i}`}
-              className="flex items-center gap-1 border border-[#00ff41] text-[#00ff41] bg-black text-xs px-2 py-1 rounded"
+              className="flex items-center gap-1 border border-[#9A3412] text-[#2A1810] bg-white text-xs px-2 py-1 rounded"
             >
               {r}
               <button
                 onClick={() => onChange(items.filter((_, j) => j !== i))}
-                className="text-[#ff0080] hover:text-[#ff0080] ml-1"
+                className="text-[#9A3412] hover:text-[#BE123C] ml-1"
                 title="Entfernen"
               >
                 ×
@@ -119,12 +127,12 @@ function ReactionBuilder({
 
   return (
     <div className="space-y-3">
-      <div className="text-[#00ff41] text-xs font-bold uppercase tracking-wider">
-        RESSOURCEN — in die Zonen ziehen
+      <div className="text-[#9A3412] text-xs font-bold uppercase tracking-wider">
+        Ressourcen — in die Zonen ziehen
       </div>
       <div className="flex flex-wrap gap-2">
         {resources.length === 0 && (
-          <span className="text-[#00ff41]/40 text-xs italic">keine Ressourcen</span>
+          <span className="text-[#2A1810]/40 text-xs italic">keine Ressourcen</span>
         )}
         {resources.map(r => (
           <span
@@ -135,7 +143,7 @@ function ReactionBuilder({
               e.dataTransfer.setData('text/plain', r);
             }}
             onDragEnd={() => setDragging(null)}
-            className="cursor-grab active:cursor-grabbing border border-[#00ff41] text-[#00ff41] bg-black font-mono text-xs px-2 py-1 rounded select-none"
+            className="cursor-grab active:cursor-grabbing border border-[#9A3412] text-[#2A1810] bg-white text-xs px-2 py-1 rounded select-none"
           >
             {r}
           </span>
@@ -148,7 +156,7 @@ function ReactionBuilder({
       </div>
 
       {!disabled && (
-        <div className="font-mono text-[#00ff41] text-sm" style={{ textShadow: '0 0 6px #00ff41' }}>
+        <div className="font-mono text-[#2A1810] text-sm">
           {inputs.join(' + ')} → {outputs.join(' + ')}
         </div>
       )}
@@ -160,10 +168,102 @@ function ReactionBuilder({
           setOutputs([]);
         }}
         disabled={disabled}
-        className="w-full px-3 py-1.5 bg-[#00ff41] text-black font-bold text-sm rounded hover:bg-[#00cc33] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="w-full px-3 py-1.5 bg-[#9A3412] text-white font-bold text-sm rounded hover:bg-[#7c2a0e] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
-        + ADD REACTION
+        + Reaktion hinzufügen
       </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Inflow / Outflow builder
+// ---------------------------------------------------------------------------
+
+function FlowBuilder({
+  resources,
+  onAddFlow,
+}: {
+  resources: string[];
+  onAddFlow: (kind: 'inflow' | 'outflow', resource: string) => void;
+}) {
+  const [mode, setMode] = useState<'inflow' | 'outflow' | null>(null);
+  const [picked, setPicked] = useState('');
+  const [custom, setCustom] = useState('');
+
+  const submit = () => {
+    const res = custom.trim() || picked;
+    if (!res || !mode) return;
+    onAddFlow(mode, res);
+    setMode(null);
+    setPicked('');
+    setCustom('');
+  };
+
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="flex gap-2">
+        <button
+          onClick={() => { setMode(mode === 'inflow' ? null : 'inflow'); setPicked(''); setCustom(''); }}
+          className={`flex-1 px-3 py-1.5 rounded text-sm font-bold border transition-colors ${
+            mode === 'inflow'
+              ? 'bg-[#9A3412] text-white border-[#9A3412]'
+              : 'bg-white text-[#9A3412] border-[#9A3412] hover:bg-[#9A3412]/5'
+          }`}
+        >
+          + Inflow (∅ → Ressource)
+        </button>
+        <button
+          onClick={() => { setMode(mode === 'outflow' ? null : 'outflow'); setPicked(''); setCustom(''); }}
+          className={`flex-1 px-3 py-1.5 rounded text-sm font-bold border transition-colors ${
+            mode === 'outflow'
+              ? 'bg-[#9A3412] text-white border-[#9A3412]'
+              : 'bg-white text-[#9A3412] border-[#9A3412] hover:bg-[#9A3412]/5'
+          }`}
+        >
+          + Outflow (Ressource → ∅)
+        </button>
+      </div>
+
+      {mode && (
+        <div className="bg-[#FFFDF8] border border-[#D4C4B0] rounded p-3 space-y-2">
+          <div className="text-[#9A3412] text-xs font-bold">
+            {mode === 'inflow' ? 'Welche Ressource fließt herein?' : 'Welche Ressource fließt heraus?'}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {resources.map(r => (
+              <button
+                key={r}
+                onClick={() => { setPicked(r); setCustom(''); }}
+                className={`text-xs px-2 py-1 rounded border transition-colors ${
+                  picked === r
+                    ? 'bg-[#9A3412] text-white border-[#9A3412]'
+                    : 'bg-white text-[#2A1810] border-[#D4C4B0] hover:border-[#9A3412]'
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={custom}
+              onChange={e => { setCustom(e.target.value); setPicked(''); }}
+              onKeyDown={e => e.key === 'Enter' && submit()}
+              placeholder="…oder neue Ressource"
+              className="flex-1 bg-white border border-[#D4C4B0] text-[#2A1810] text-sm rounded px-3 py-1.5 placeholder-[#2A1810]/40 focus:outline-none focus:border-[#9A3412]"
+            />
+            <button
+              onClick={submit}
+              disabled={!custom.trim() && !picked}
+              className="px-3 py-1.5 bg-[#9A3412] text-white font-bold text-sm rounded hover:bg-[#7c2a0e] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -187,11 +287,15 @@ function NetworkGraph({ network, startSet, result }: { network: ReactionNetwork;
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const seedRef = useRef(0);
 
-  // Build edges: reaction -> input, reaction -> output
-  const edges: { from: string; to: string; type: 'in' | 'out' }[] = [];
+  // Map reaction id -> index (for stable colors)
+  const reactionIndex = new Map<string, number>();
+  network.reactions.forEach((rx, i) => reactionIndex.set(rx.id, i));
+
+  // Build edges: reaction -> input (in), reaction -> output (out)
+  const edges: { from: string; to: string; type: 'in' | 'out'; rxId: string }[] = [];
   for (const rx of network.reactions) {
-    for (const i of rx.inputs) edges.push({ from: `rx:${rx.id}`, to: `res:${i}`, type: 'in' });
-    for (const o of rx.outputs) edges.push({ from: `rx:${rx.id}`, to: `res:${o}`, type: 'out' });
+    for (const i of rx.inputs) edges.push({ from: `rx:${rx.id}`, to: `res:${i}`, type: 'in', rxId: rx.id });
+    for (const o of rx.outputs) edges.push({ from: `rx:${rx.id}`, to: `res:${o}`, type: 'out', rxId: rx.id });
   }
 
   const nodeIds =
@@ -271,47 +375,140 @@ function NetworkGraph({ network, startSet, result }: { network: ReactionNetwork;
   // Color logic per resource
   const finalSet = result?.organization ?? [];
   const closedSet = result?.closedSet ?? [];
-  const resourceColor = (r: string): { fill: string; stroke: string; strike: boolean; glow: boolean } => {
-    if (!result) return { fill: '#444444', stroke: '#444444', strike: false, glow: false };
-    if (startSet.includes(r)) return { fill: '#00ff41', stroke: '#00ff41', strike: false, glow: true };
+  const resourceColor = (r: string): { fill: string; stroke: string; strike: boolean; text: string } => {
+    if (!result) return { fill: '#FFFDF8', stroke: '#9A3412', strike: false, text: '#2A1810' };
+    if (startSet.includes(r)) return { fill: '#9A3412', stroke: '#9A3412', strike: false, text: '#FFFFFF' };
     // removed in self-maintenance: in closedSet but not in final
     if (closedSet.includes(r) && !finalSet.includes(r)) {
-      return { fill: '#0a0a0a', stroke: '#ff0080', strike: true, glow: false };
+      return { fill: '#FFFFFF', stroke: '#BE123C', strike: true, text: '#BE123C' };
     }
     // added by closure
     if (closedSet.includes(r) && !startSet.includes(r)) {
-      return { fill: '#ffff00', stroke: '#ffff00', strike: false, glow: false };
+      return { fill: '#B45309', stroke: '#B45309', strike: false, text: '#FFFFFF' };
     }
-    if (finalSet.includes(r)) return { fill: '#00ff41', stroke: '#00ff41', strike: false, glow: true };
-    return { fill: '#444444', stroke: '#444444', strike: false, glow: false };
+    if (finalSet.includes(r)) return { fill: '#9A3412', stroke: '#9A3412', strike: false, text: '#FFFFFF' };
+    return { fill: '#FFFDF8', stroke: '#D4C4B0', strike: false, text: '#2A1810' };
   };
 
+  // helper: shorten a line so it stops before the target node (for arrowheads)
+  const shorten = (ax: number, ay: number, bx: number, by: number, pad: number) => {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+    return { x: bx - (dx / d) * pad, y: by - (dy / d) * pad };
+  };
+
+  // collect unique reaction colors needed for markers
+  const markerColors = Array.from(new Set(network.reactions.map((_, i) => reactionColor(i)).concat(['#B7A48C'])));
+  const colorKey = (c: string) => c.replace('#', '');
+
+  // env anchor for inflow/outflow reactions (top-left corner of canvas)
+  const envPos = { x: 30, y: 30 };
+  const hasFlow = network.reactions.some(rx => rx.inputs.length === 0 || rx.outputs.length === 0);
+
   return (
-    <div className="overflow-auto rounded border border-[#00ff41]/30 bg-[#0a0a0a]" style={{ minHeight: 400 }}>
+    <div className="overflow-auto rounded border border-[#D4C4B0] bg-[#FFFDF8]" style={{ minHeight: 400 }}>
       <svg width={W} height={H} className="block" style={{ minWidth: W }}>
+        <defs>
+          {markerColors.map(c => (
+            <marker
+              key={`arr-${colorKey(c)}`}
+              id={`arrow-${colorKey(c)}`}
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 0 L 10 5 L 0 10 z" fill={c} />
+            </marker>
+          ))}
+        </defs>
+
         {/* edges */}
         {edges.map((e, i) => {
-          const a = positions[e.from];
-          const b = positions[e.to];
+          const a = positions[e.from]; // reaction
+          const b = positions[e.to]; // resource
           if (!a || !b) return null;
+          const idx = reactionIndex.get(e.rxId) ?? 0;
+          const col = result ? reactionColor(idx) : '#B7A48C';
+          const mk = `url(#arrow-${colorKey(col)})`;
+          if (e.type === 'in') {
+            // input: solid line, arrow pointing INTO the reaction node (resource -> reaction)
+            const end = shorten(b.x, b.y, a.x, a.y, 11);
+            return (
+              <line
+                key={i}
+                x1={b.x}
+                y1={b.y}
+                x2={end.x}
+                y2={end.y}
+                stroke={col}
+                strokeOpacity={0.85}
+                strokeWidth={1.5}
+                markerEnd={mk}
+              />
+            );
+          }
+          // output: dashed line, arrow pointing OUT of reaction node (reaction -> resource)
+          const end = shorten(a.x, a.y, b.x, b.y, 11);
           return (
             <line
               key={i}
               x1={a.x}
               y1={a.y}
-              x2={b.x}
-              y2={b.y}
-              stroke={result ? (e.type === 'in' ? '#00ff41' : '#ff0080') : '#444444'}
-              strokeOpacity={0.3}
-              strokeWidth={1}
+              x2={end.x}
+              y2={end.y}
+              stroke={col}
+              strokeOpacity={0.85}
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
+              markerEnd={mk}
             />
           );
         })}
 
-        {/* reaction nodes */}
+        {/* env connections for inflow/outflow reactions */}
         {network.reactions.map(rx => {
+          const isInflow = rx.inputs.length === 0;
+          const isOutflow = rx.outputs.length === 0;
+          if (!isInflow && !isOutflow) return null;
           const p = positions[`rx:${rx.id}`];
           if (!p) return null;
+          const idx = reactionIndex.get(rx.id) ?? 0;
+          const col = result ? reactionColor(idx) : '#B7A48C';
+          const mk = `url(#arrow-${colorKey(col)})`;
+          if (isInflow) {
+            // env -> reaction (solid, into reaction)
+            const end = shorten(envPos.x, envPos.y, p.x, p.y, 11);
+            return (
+              <line key={`env-${rx.id}`} x1={envPos.x} y1={envPos.y} x2={end.x} y2={end.y}
+                stroke={col} strokeOpacity={0.85} strokeWidth={1.5} markerEnd={mk} />
+            );
+          }
+          // outflow: reaction -> env (dashed, out of reaction)
+          const end = shorten(p.x, p.y, envPos.x, envPos.y, 13);
+          return (
+            <line key={`env-${rx.id}`} x1={p.x} y1={p.y} x2={end.x} y2={end.y}
+              stroke={col} strokeOpacity={0.85} strokeWidth={1.5} strokeDasharray="4 3" markerEnd={mk} />
+          );
+        })}
+
+        {/* env node (only if any inflow/outflow exists) */}
+        {hasFlow && (
+          <g>
+            <circle cx={envPos.x} cy={envPos.y} r={11} fill="#FFFDF8" stroke="#9A3412" strokeWidth={1.5} strokeDasharray="3 2" />
+            <text x={envPos.x} y={envPos.y + 4} textAnchor="middle" fontSize={11} fill="#9A3412" fontWeight="bold">∅</text>
+            <text x={envPos.x} y={envPos.y + 24} textAnchor="middle" fontSize={9} fill="#9A3412">env</text>
+          </g>
+        )}
+
+        {/* reaction nodes */}
+        {network.reactions.map((rx, i) => {
+          const p = positions[`rx:${rx.id}`];
+          if (!p) return null;
+          const col = result ? reactionColor(i) : '#8a7a64';
           return (
             <g key={rx.id}>
               <rect
@@ -319,10 +516,10 @@ function NetworkGraph({ network, startSet, result }: { network: ReactionNetwork;
                 y={p.y - 7}
                 width={14}
                 height={14}
-                fill={result ? '#ff0080' : '#444444'}
+                fill={col}
                 rx={2}
               />
-              <text x={p.x} y={p.y - 11} textAnchor="middle" className="font-mono" fontSize={10} fill="#ff0080">
+              <text x={p.x} y={p.y - 11} textAnchor="middle" className="font-mono" fontSize={10} fill={col}>
                 {rx.id}
               </text>
             </g>
@@ -343,10 +540,9 @@ function NetworkGraph({ network, startSet, result }: { network: ReactionNetwork;
                 fill={c.fill}
                 stroke={c.stroke}
                 strokeWidth={c.strike ? 2 : 1}
-                style={c.glow ? { filter: 'drop-shadow(0 0 6px #00ff41)' } : undefined}
               />
               {c.strike && (
-                <line x1={p.x - 11} y1={p.y} x2={p.x + 11} y2={p.y} stroke="#ff0080" strokeWidth={2} />
+                <line x1={p.x - 11} y1={p.y} x2={p.x + 11} y2={p.y} stroke="#BE123C" strokeWidth={2} />
               )}
               <text
                 x={p.x}
@@ -354,7 +550,7 @@ function NetworkGraph({ network, startSet, result }: { network: ReactionNetwork;
                 textAnchor="middle"
                 className="font-mono"
                 fontSize={10}
-                fill={c.stroke}
+                fill={c.text === '#FFFFFF' ? c.stroke : c.text}
               >
                 {r}
               </text>
@@ -375,23 +571,23 @@ function LiveCheck({ network, startSet }: { network: ReactionNetwork; startSet: 
   const preview = computeOrganization(network, startSet);
 
   return (
-    <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/20 p-3 space-y-2">
-      <div className="text-[#00ff41] text-xs font-bold uppercase tracking-wider">LIVE-CHECK</div>
-      <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-        <div className={`rounded p-2 border ${preview.isClosed ? 'border-[#00ff41]/40 text-[#00ff41]' : 'border-[#ff0080]/60 text-[#ff0080]'}`}>
+    <div className="bg-[#FFFDF8] rounded border border-[#D4C4B0] p-3 space-y-2">
+      <div className="text-[#9A3412] text-xs font-bold uppercase tracking-wider">Live-Check</div>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className={`rounded p-2 border bg-white ${preview.isClosed ? 'border-[#15803D] text-[#15803D]' : 'border-[#BE123C] text-[#BE123C]'}`}>
           {preview.isClosed ? '✓' : '✗'} Abgeschlossen
           {!preview.isClosed && (
-            <div className="text-[#c0c0c0] mt-1 text-[10px]">
+            <div className="text-[#2A1810] mt-1 text-[10px]">
               {preview.closureViolations.map(v =>
                 `${v.reactionId} → ${v.outsideResources.join(', ')} ∉ Set`
               ).join(' | ')}
             </div>
           )}
         </div>
-        <div className={`rounded p-2 border ${preview.isSelfMaintaining ? 'border-[#00ff41]/40 text-[#00ff41]' : 'border-[#ff0080]/60 text-[#ff0080]'}`}>
+        <div className={`rounded p-2 border bg-white ${preview.isSelfMaintaining ? 'border-[#15803D] text-[#15803D]' : 'border-[#BE123C] text-[#BE123C]'}`}>
           {preview.isSelfMaintaining ? '✓' : '✗'} Selbsterhaltend
           {!preview.isSelfMaintaining && (
-            <div className="text-[#c0c0c0] mt-1 text-[10px]">
+            <div className="text-[#2A1810] mt-1 text-[10px]">
               Nicht produziert: {preview.selfMaintViolations.join(', ')}
             </div>
           )}
@@ -402,6 +598,9 @@ function LiveCheck({ network, startSet }: { network: ReactionNetwork; startSet: 
 }
 
 // ---------------------------------------------------------------------------
+
+const PANEL = 'bg-[#FFFDF8] rounded border border-[#D4C4B0] p-4';
+const LABEL = 'text-[#9A3412] text-xs uppercase tracking-wider mb-3 font-bold';
 
 export default function NetworkEditor({ network, startSet, result, onNetworkChange, onStartSetChange, onAnalyze }: Props) {
   const [activePreset, setActivePreset] = useState<string>('ecosystem');
@@ -447,6 +646,19 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
     });
   };
 
+  const addFlow = (kind: 'inflow' | 'outflow', resource: string) => {
+    const id = `r${network.reactions.length + 1}`;
+    const reaction: Reaction =
+      kind === 'inflow'
+        ? { id, inputs: [], outputs: [resource], label: `∅ → ${resource} (Inflow)` }
+        : { id, inputs: [resource], outputs: [], label: `${resource} → ∅ (Outflow)` };
+    const allNew = [resource].filter(x => !network.resources.includes(x));
+    onNetworkChange({
+      resources: [...network.resources, ...allNew],
+      reactions: [...network.reactions, reaction],
+    });
+  };
+
   const addReaction = () => {
     setReactionError('');
     const raw = newReaction.trim();
@@ -480,17 +692,17 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
   return (
     <div className="space-y-6">
       {/* Preset selector */}
-      <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
-        <div className="text-[#00ff41] text-xs uppercase tracking-wider mb-3 font-bold">BEISPIELNETZWERK</div>
+      <div className={PANEL}>
+        <div className={LABEL}>Beispielnetzwerk</div>
         <div className="flex gap-2 flex-wrap mb-2">
           {Object.entries(presets).map(([key, preset]) => (
             <button
               key={key}
               onClick={() => handlePresetChange(key)}
-              className={`px-3 py-1.5 rounded text-sm font-mono transition-all ${
+              className={`px-3 py-1.5 rounded text-sm font-bold transition-colors ${
                 activePreset === key
-                  ? 'bg-[#00ff41] text-black font-bold'
-                  : 'border border-[#00ff41] text-[#00ff41] bg-black hover:bg-[#00ff4110]'
+                  ? 'bg-[#9A3412] text-white'
+                  : 'border border-[#9A3412] text-[#9A3412] bg-white hover:bg-[#9A3412]/5'
               }`}
             >
               {preset.name}
@@ -498,7 +710,7 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
           ))}
         </div>
         {presets[activePreset]?.description && (
-          <div className="text-[#c0c0c0] text-xs border-t border-[#00ff41]/20 pt-2">
+          <div className="text-[#2A1810]/80 text-xs border-t border-[#D4C4B0] pt-2">
             {presets[activePreset].description}
           </div>
         )}
@@ -506,20 +718,20 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Resources panel */}
-        <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
-          <div className="text-[#00ff41] text-xs uppercase tracking-wider mb-3 font-bold">
-            RESSOURCEN ({network.resources.length})
+        <div className={PANEL}>
+          <div className={LABEL}>
+            Ressourcen ({network.resources.length})
           </div>
           <div className="flex flex-wrap gap-2 mb-3 min-h-[40px]">
             {network.resources.map(r => (
               <span
                 key={r}
-                className="flex items-center gap-1 border border-[#00ff41] text-[#00ff41] bg-black text-xs px-2 py-1 rounded"
+                className="flex items-center gap-1 border border-[#9A3412] text-[#2A1810] bg-white text-xs px-2 py-1 rounded"
               >
                 {r}
                 <button
                   onClick={() => removeResource(r)}
-                  className="text-[#ff0080] hover:text-[#ff0080] transition-colors ml-1"
+                  className="text-[#9A3412] hover:text-[#BE123C] transition-colors ml-1"
                   title="Entfernen"
                 >
                   ×
@@ -534,11 +746,11 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
               onChange={e => setNewResource(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addResource()}
               placeholder="Neue Ressource…"
-              className="flex-1 bg-black border border-[#00ff41] text-[#00ff41] font-mono text-sm rounded px-3 py-1.5 placeholder-[#00ff41]/40 focus:outline-none"
+              className="flex-1 bg-white border border-[#D4C4B0] text-[#2A1810] text-sm rounded px-3 py-1.5 placeholder-[#2A1810]/40 focus:outline-none focus:border-[#9A3412]"
             />
             <button
               onClick={addResource}
-              className="px-3 py-1.5 bg-[#00ff41] text-black font-bold text-sm rounded hover:bg-[#00cc33] transition-colors"
+              className="px-3 py-1.5 bg-[#9A3412] text-white font-bold text-sm rounded hover:bg-[#7c2a0e] transition-colors"
             >
               +
             </button>
@@ -546,30 +758,30 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
         </div>
 
         {/* Reactions panel */}
-        <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
-          <div className="text-[#00ff41] text-xs uppercase tracking-wider mb-3 font-bold">
-            REAKTIONEN ({network.reactions.length})
+        <div className={PANEL}>
+          <div className={LABEL}>
+            Reaktionen ({network.reactions.length})
           </div>
           <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-            {network.reactions.map(r => {
+            {network.reactions.map((r, idx) => {
               const isSource = r.inputs.length === 0;
               const isSink = r.outputs.length === 0;
+              const col = reactionColor(idx);
               return (
                 <div
                   key={r.id}
-                  className={`flex items-center justify-between bg-black rounded px-3 py-1.5 border ${
-                    isSource ? 'border-[#ff0080]/60' : isSink ? 'border-[#ffff00]/40' : 'border-[#00ff41]/30'
-                  }`}
+                  className="flex items-center justify-between bg-white rounded px-3 py-1.5 border"
+                  style={{ borderColor: col }}
                 >
-                  <span className="text-xs font-mono text-[#00ff41] flex items-center gap-1.5">
-                    <span className="text-[#ff0080]">{r.id}</span>
+                  <span className="text-xs font-mono text-[#2A1810] flex items-center gap-1.5">
+                    <span className="font-bold" style={{ color: col }}>{r.id}</span>
                     {reactionToString(r)}
-                    {isSource && <span className="text-[#ff0080] text-[10px] border border-[#ff0080]/60 px-1 rounded">QUELLE</span>}
-                    {isSink && <span className="text-[#ffff00] text-[10px] border border-[#ffff00]/60 px-1 rounded">SENKE</span>}
+                    {isSource && <span className="text-[#9A3412] text-[10px] border border-[#9A3412] bg-white px-1 rounded">QUELLE</span>}
+                    {isSink && <span className="text-[#9A3412] text-[10px] border border-[#9A3412] bg-white px-1 rounded">SENKE</span>}
                   </span>
                   <button
                     onClick={() => removeReaction(r.id)}
-                    className="text-[#ff0080] hover:text-[#ff0080] ml-2 text-sm transition-colors"
+                    className="text-[#9A3412] hover:text-[#BE123C] ml-2 text-sm transition-colors"
                     title="Entfernen"
                   >
                     ×
@@ -582,15 +794,17 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
       </div>
 
       {/* Drag & drop reaction builder */}
-      <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
-        <div className="text-[#00ff41] text-xs uppercase tracking-wider mb-3 font-bold">
-          REAKTIONS-BAUKASTEN
+      <div className={PANEL}>
+        <div className={LABEL}>
+          Reaktions-Baukasten
         </div>
         <ReactionBuilder resources={network.resources} onAddReaction={addReactionFromBuilder} />
 
+        <FlowBuilder resources={network.resources} onAddFlow={addFlow} />
+
         <button
           onClick={() => setShowManual(s => !s)}
-          className="mt-3 text-[#ff0080] hover:bg-[#ff008020] border border-[#ff0080] px-2 py-1 rounded text-xs transition-colors"
+          className="mt-3 text-[#9A3412] bg-white hover:bg-[#9A3412]/5 border border-[#9A3412] px-2 py-1 rounded text-xs font-bold transition-colors"
         >
           {showManual ? '▲ manuelle Eingabe ausblenden' : '▼ oder manuell eingeben'}
         </button>
@@ -603,12 +817,12 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
               onChange={e => setNewReaction(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addReaction()}
               placeholder="a + b → c + d"
-              className="w-full bg-black border border-[#00ff41] text-[#00ff41] text-sm font-mono rounded px-3 py-1.5 placeholder-[#00ff41]/40 focus:outline-none"
+              className="w-full bg-white border border-[#D4C4B0] text-[#2A1810] text-sm font-mono rounded px-3 py-1.5 placeholder-[#2A1810]/40 focus:outline-none focus:border-[#9A3412]"
             />
-            {reactionError && <p className="text-[#ff0080] text-xs">{reactionError}</p>}
+            {reactionError && <p className="text-[#BE123C] text-xs">{reactionError}</p>}
             <button
               onClick={addReaction}
-              className="w-full px-3 py-1.5 border border-[#ff0080] text-[#ff0080] hover:bg-[#ff008020] text-sm rounded transition-colors"
+              className="w-full px-3 py-1.5 border border-[#9A3412] text-[#9A3412] bg-white hover:bg-[#9A3412] hover:text-white text-sm font-bold rounded transition-colors"
             >
               Reaktion hinzufügen
             </button>
@@ -617,11 +831,11 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
       </div>
 
       {/* Start set selector */}
-      <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
-        <div className="text-[#00ff41] text-xs uppercase tracking-wider mb-1 font-bold">
-          STARTMENGE WÄHLEN
+      <div className={PANEL}>
+        <div className="text-[#9A3412] text-xs uppercase tracking-wider mb-1 font-bold">
+          Startmenge wählen
         </div>
-        <p className="text-[#c0c0c0] text-xs mb-3">
+        <p className="text-[#2A1810]/80 text-xs mb-3">
           Klicke auf Ressourcen, um sie in die Startmenge aufzunehmen oder zu entfernen.
         </p>
         <div className="flex flex-wrap gap-2 mb-2">
@@ -629,19 +843,18 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
             <button
               key={r}
               onClick={() => toggleStart(r)}
-              className={`text-sm px-3 py-1.5 rounded border font-mono transition-all ${
+              className={`text-sm px-3 py-1.5 rounded border font-bold transition-colors ${
                 startSet.includes(r)
-                  ? 'bg-[#00ff41] text-black border-[#00ff41] font-bold'
-                  : 'bg-black text-[#00ff41]/60 border-[#00ff41]/30 hover:border-[#00ff41]'
+                  ? 'bg-[#9A3412] text-white border-[#9A3412]'
+                  : 'bg-white text-[#2A1810]/70 border-[#D4C4B0] hover:border-[#9A3412]'
               }`}
-              style={startSet.includes(r) ? { boxShadow: '0 0 10px #00ff41' } : undefined}
             >
               {startSet.includes(r) ? '✓ ' : ''}{r}
             </button>
           ))}
         </div>
         {startSet.length === 0 && (
-          <div className="text-[#ff0080] text-xs mt-1">Keine Ressourcen gewählt — Analyse nicht möglich.</div>
+          <div className="text-[#BE123C] text-xs mt-1">Keine Ressourcen gewählt — Analyse nicht möglich.</div>
         )}
       </div>
 
@@ -649,26 +862,27 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
       <LiveCheck network={network} startSet={startSet} />
 
       {/* Network visualization */}
-      <div className="bg-[#0a0a0a] rounded border border-[#00ff41]/30 p-4">
+      <div className={PANEL}>
         <div className="flex items-center justify-between mb-3">
-          <div className="text-[#00ff41] text-xs uppercase tracking-wider font-bold">
-            NETZWERK-VISUALISIERUNG {result ? '(analysiert)' : '(roh)'}
+          <div className="text-[#9A3412] text-xs uppercase tracking-wider font-bold">
+            Netzwerk-Visualisierung {result ? '(analysiert)' : '(roh)'}
           </div>
           <button
             onClick={() => setShowGraph(s => !s)}
-            className="border border-[#ff0080] text-[#ff0080] hover:bg-[#ff008020] px-2 py-1 rounded text-xs transition-colors"
+            className="border border-[#9A3412] text-[#9A3412] bg-white hover:bg-[#9A3412] hover:text-white px-2 py-1 rounded text-xs font-bold transition-colors"
           >
             {showGraph ? 'ausblenden' : 'anzeigen'}
           </button>
         </div>
         {showGraph && <NetworkGraph network={network} startSet={startSet} result={result} />}
-        {showGraph && result && (
-          <div className="flex flex-wrap gap-3 mt-2 text-[10px] font-mono">
-            <span className="text-[#00ff41]">● Startmenge / Organisation</span>
-            <span className="text-[#ffff00]">● durch Closure</span>
-            <span className="text-[#ff0080]">⊘ entfernt</span>
-            <span className="text-[#444444]">● neutral</span>
-            <span className="text-[#ff0080]">■ Reaktion</span>
+        {showGraph && (
+          <div className="flex flex-wrap gap-3 mt-2 text-[10px] text-[#2A1810]">
+            {result && <span className="text-[#9A3412]">● Startmenge / Organisation</span>}
+            {result && <span className="text-[#B45309]">● durch Closure</span>}
+            {result && <span className="text-[#BE123C]">⊘ entfernt</span>}
+            <span>— Input (durchgezogen, → in Reaktion)</span>
+            <span>· · Output (gestrichelt, aus Reaktion →)</span>
+            <span>∅ env = außerhalb des Systems</span>
           </div>
         )}
       </div>
@@ -677,10 +891,9 @@ export default function NetworkEditor({ network, startSet, result, onNetworkChan
       <button
         onClick={onAnalyze}
         disabled={startSet.length === 0 && network.reactions.length === 0}
-        className="w-full py-3 bg-[#00ff41] text-black hover:bg-[#00cc33] disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg rounded transition-all"
-        style={{ boxShadow: '0 0 10px #00ff41' }}
+        className="w-full py-3 bg-[#9A3412] text-white hover:bg-[#7c2a0e] disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg rounded transition-colors"
       >
-        ANALYSE STARTEN →
+        Analyse starten →
       </button>
     </div>
   );
